@@ -1,0 +1,79 @@
+{
+  "label": "Real packaged Electron Bulk Data Import smoke test",
+  "capturedAt": "2026-08-03T12:37:32.693Z",
+  "isolatedUserDataPath": "test-data/electron-import-smoke/user-data",
+  "packagedExecutablePath": "dist-package/win-unpacked/Smart Vyapar.exe",
+  "screenshots": [
+    "docs/evidence/bulk-import-foundation/import_dashboard.png",
+    "docs/evidence/bulk-import-foundation/import_step2_uom.png"
+  ],
+  "checkpoints": [
+    {
+      "name": "Shop profile created successfully and redirected to dashboard",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Bulk data import grid fully loaded",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "UOM card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Tax Rate card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Price Book card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Barcode card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Price card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Opening Stock card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier balance card exists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Step 2: File upload & column mapper page loaded",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Packaged application closes cleanly",
+      "status": "PASS",
+      "notes": ""
+    }
+  ],
+  "defects": [],
+  "consoleMessages": []
+}

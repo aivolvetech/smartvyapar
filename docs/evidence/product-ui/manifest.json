@@ -1,0 +1,30 @@
+{
+  "label": "Renderer UI verification using browser mock APIs",
+  "capturedAt": "2026-08-02T07:41:50.969Z",
+  "viewport": {
+    "width": 1366,
+    "height": 768
+  },
+  "files": [
+    "01-product-list-1366x768.png",
+    "02-create-product.png",
+    "03-edit-product.png",
+    "04-product-view.png",
+    "05-unit-manager.png",
+    "06-category-manager.png",
+    "07-brand-manager.png",
+    "08-tax-rate-manager.png",
+    "09-duplicate-product-code.png",
+    "10-duplicate-barcode.png"
+  ],
+  "consoleMessages": [
+    {
+      "level": 2,
+      "message": "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security\n  Policy set or a policy with \"unsafe-eval\" enabled. This exposes users of\n  this app to unnecessary security risks.\n\nFor more information and help, consult\nhttps://electronjs.org/docs/tutorial/security.\nThis warning will not show up\nonce the app is packaged."
+    },
+    {
+      "level": 2,
+      "message": "%cElectron Security Warning (Insecure Content-Security-Policy) font-weight: bold; This renderer process has either no Content Security\n  Policy set or a policy with \"unsafe-eval\" enabled. This exposes users of\n  this app to unnecessary security risks.\n\nFor more information and help, consult\nhttps://electronjs.org/docs/tutorial/security.\nThis warning will not show up\nonce the app is packaged."
+    }
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "shopCount": 1,
+  "supplierCount": 1,
+  "purchaseInvoiceCount": 1,
+  "purchaseInvoiceLineCount": 2,
+  "supplierLedgerEntryCount": 3,
+  "documentSequenceCount": 1,
+  "supplier": {
+    "id": "48ebcbb0-945c-4a55-b0c5-a40215e9ee9e",
+    "supplierCode": "SUP-A",
+    "name": "Maharashtra Supplier A",
+    "openingBalance": 1200,
+    "openingBalanceType": "PAYABLE"
+  },
+  "supplierOutstanding": 1200,
+  "ledgerEntries": [
+    {
+      "entryType": "OPENING_BALANCE",
+      "creditAmount": 1200,
+      "debitAmount": 0,
+      "referenceType": "SUPPLIER_OPENING",
+      "referenceNumber": null
+    },
+    {
+      "entryType": "PURCHASE",
+      "creditAmount": 1180,
+      "debitAmount": 0,
+      "referenceType": "PURCHASE_INVOICE",
+      "referenceNumber": "PUR-2026-000001"
+    },
+    {
+      "entryType": "PURCHASE_CANCELLATION",
+      "creditAmount": 0,
+      "debitAmount": 1180,
+      "referenceType": "PURCHASE_INVOICE",
+      "referenceNumber": "PUR-2026-000001"
+    }
+  ],
+  "product": {
+    "id": "a1c4ea75-e307-4dde-8bec-f08b103e3317",
+    "productCode": "ITEM-A",
+    "name": "Tracked Product A"
+  },
+  "quantityOnHand": 0,
+  "inventoryTransactions": [
+    {
+      "transactionType": "PURCHASE_IN",
+      "quantity": 10,
+      "unitCost": 100,
+      "referenceType": "PURCHASE_INVOICE",
+      "referenceNumber": "PUR-2026-000001",
+      "reasonCode": "PURCHASE_IN"
+    },
+    {
+      "transactionType": "REVERSAL",
+      "quantity": -10,
+      "unitCost": 100,
+      "referenceType": "REVERSAL",
+      "referenceNumber": "PUR-2026-000001",
+      "reasonCode": "PURCHASE_CANCELLED"
+    }
+  ],
+  "foreignKeyViolations": 0
+}

@@ -1,0 +1,155 @@
+{
+  "label": "Real packaged Electron Product Master smoke test",
+  "capturedAt": "2026-08-02T08:19:42.232Z",
+  "isolatedUserDataPath": "test-data/electron-product-smoke/user-data",
+  "packagedExecutablePath": "dist-package/win-unpacked/Smart Vyapar.exe",
+  "launchCommand": "SMART_VYAPAR_ELECTRON_SMOKE=true \"dist-package/win-unpacked/Smart Vyapar.exe\" --remote-debugging-port=9333 --disable-gpu",
+  "screenshots": [
+    "docs/evidence/product-electron-smoke/01-packaged-shop-setup.png",
+    "docs/evidence/product-electron-smoke/02-packaged-product-list.png",
+    "docs/evidence/product-electron-smoke/03-packaged-create-product.png",
+    "docs/evidence/product-electron-smoke/04-packaged-product-view.png",
+    "docs/evidence/product-electron-smoke/05-packaged-edit-product.png",
+    "docs/evidence/product-electron-smoke/06-duplicate-product-code-error.png",
+    "docs/evidence/product-electron-smoke/07-duplicate-barcode-error.png",
+    "docs/evidence/product-electron-smoke/08-product-search-result.png",
+    "docs/evidence/product-electron-smoke/09-full-window-1366x768.png",
+    "docs/evidence/product-electron-smoke/10-product-after-restart.png"
+  ],
+  "checkpoints": [
+    {
+      "name": "Packaged Shop Setup appears",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Test Shop can be created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Database status connected and encrypted",
+      "status": "PASS",
+      "notes": "{\"success\":true,\"data\":{\"state\":\"CONNECTED\",\"encrypted\":true,\"offline\":true}}"
+    },
+    {
+      "name": "Products module opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Unit records load from SQLCipher",
+      "status": "PASS",
+      "notes": "count=8"
+    },
+    {
+      "name": "Tax Rate seed records load",
+      "status": "PASS",
+      "notes": "count=8"
+    },
+    {
+      "name": "Category can be created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Brand can be created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product creation succeeds",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product has persisted default ProductPrice",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product barcode persists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Opening balance persists for GOODS product",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product appears in Product List",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product View loads persisted values",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product Edit persists changes",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Duplicate Product Code is rejected",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Duplicate Barcode is rejected",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Search by Product Code works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Search by Barcode works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product deactivate/activate persists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Renderer security boundaries pass",
+      "status": "PASS",
+      "notes": "{\"requireType\":\"undefined\",\"processType\":\"undefined\",\"ipcRendererType\":\"undefined\",\"fsType\":\"undefined\",\"genericInvokeType\":\"undefined\",\"smartInvokeType\":\"undefined\",\"bodyLeaks\":false}"
+    },
+    {
+      "name": "First packaged app session closes cleanly",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Restart persistence works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Restart packaged app session closes cleanly",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Native and packaging verification passes",
+      "status": "PASS",
+      "notes": "{\"executableExists\":true,\"productMigrationBundled\":true,\"sqlcipherNativeBundled\":true,\"dpapiNativeBundled\":true,\"queryEngineCount\":0}"
+    }
+  ],
+  "defects": [],
+  "packageChecks": {
+    "executableExists": true,
+    "productMigrationBundled": true,
+    "sqlcipherNativeBundled": true,
+    "dpapiNativeBundled": true,
+    "queryEngineCount": 0
+  },
+  "consoleMessages": []
+}

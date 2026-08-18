@@ -1,0 +1,68 @@
+{
+  "name": "smart-vyapar",
+  "version": "0.1.1",
+  "description": "Smart Vyapar - Offline desktop application for shopkeepers",
+  "main": "dist-electron/main.js",
+  "private": true,
+  "scripts": {
+    "dev": "vite",
+    "electron:dev": "npm run build:electron && electron .",
+    "native:rebuild": "electron-builder install-app-deps",
+    "typecheck": "tsc --noEmit && tsc -p tsconfig.electron.json --noEmit",
+    "build:electron": "esbuild electron/main/main.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --external:better-sqlite3 --external:better-sqlite3-multiple-ciphers --external:@primno/dpapi --outfile=dist-electron/main.js --minify && esbuild electron/preload/preload.ts --bundle --platform=node --target=node20 --format=cjs --external:electron --outfile=dist-electron/preload.js --minify",
+    "build": "npm run native:rebuild && npm run typecheck && vite build && npm run build:electron && node -e \"require('fs').writeFileSync('dist/package.json', '{}')\"",
+    "package": "npm run build && electron-builder --win"
+  },
+  "dependencies": {
+    "@primno/dpapi": "2.0.1",
+    "better-sqlite3": "11.2.0",
+    "better-sqlite3-multiple-ciphers": "11.10.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "7.6.10",
+    "@types/node": "20.11.1",
+    "@types/react": "18.3.3",
+    "@types/react-dom": "18.3.0",
+    "@vitejs/plugin-react": "4.3.0",
+    "electron": "30.0.9",
+    "electron-builder": "24.13.3",
+    "esbuild": "0.21.3",
+    "prisma": "5.14.0",
+    "typescript": "5.4.5",
+    "vite": "5.2.11"
+  },
+  "build": {
+    "appId": "com.smartvyapar.desktop",
+    "productName": "Smart Vyapar",
+    "directories": {
+      "output": "dist-package"
+    },
+    "files": [
+      "dist/**/*",
+      "dist-electron/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "prisma/migrations",
+        "to": "prisma/migrations"
+      }
+    ],
+    "asarUnpack": [
+      "node_modules/better-sqlite3/**",
+      "node_modules/better-sqlite3-multiple-ciphers/**",
+      "node_modules/@primno/dpapi/**"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

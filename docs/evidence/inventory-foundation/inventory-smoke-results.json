@@ -1,0 +1,175 @@
+{
+  "label": "Real packaged Electron Inventory Foundation smoke test",
+  "capturedAt": "2026-08-02T11:07:03.993Z",
+  "isolatedUserDataPath": "test-data/electron-inventory-smoke/user-data",
+  "packagedExecutablePath": "dist-package/win-unpacked/Smart Vyapar.exe",
+  "screenshots": [
+    "docs/evidence/inventory-foundation/01-inventory-shop-setup.png",
+    "docs/evidence/inventory-foundation/02-inventory-overview.png",
+    "docs/evidence/inventory-foundation/03-stock-list.png",
+    "docs/evidence/inventory-foundation/04-product-stock-view.png",
+    "docs/evidence/inventory-foundation/05-movement-history.png",
+    "docs/evidence/inventory-foundation/06-adjustment-in.png",
+    "docs/evidence/inventory-foundation/07-adjustment-out.png",
+    "docs/evidence/inventory-foundation/08-damage-stock.png",
+    "docs/evidence/inventory-foundation/09-expired-stock.png",
+    "docs/evidence/inventory-foundation/10-lost-stock.png",
+    "docs/evidence/inventory-foundation/11-full-window-1366x768.png",
+    "docs/evidence/inventory-foundation/12-low-stock-dashboard.png"
+  ],
+  "checkpoints": [
+    {
+      "name": "Packaged app launches and creates Shop",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Existing Product Master works and creates inventory product",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Opening balance posts to ledger",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Adjustment-in works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Adjustment-out works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Damage works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Expiry works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Loss works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Negative stock blocked where configured",
+      "status": "PASS",
+      "notes": "Insufficient stock. Available: 12, requested: 100."
+    },
+    {
+      "name": "Inventory module opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Product View displays stock",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Current stock displays correctly",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Dashboard low-stock count displays",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Renderer security passes",
+      "status": "PASS",
+      "notes": "{\"requireType\":\"undefined\",\"processType\":\"undefined\",\"ipcRendererType\":\"undefined\",\"fsType\":\"undefined\",\"genericInvokeType\":\"undefined\",\"bodyLeaks\":false}"
+    },
+    {
+      "name": "App closes",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Stock and movements persist after restart",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Restart app closes",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "No Prisma runtime/query engine returns",
+      "status": "PASS",
+      "notes": "{\"migrationBundled\":true,\"queryEngineCount\":0}"
+    },
+    {
+      "name": "No native module error",
+      "status": "PASS",
+      "notes": ""
+    }
+  ],
+  "defects": [],
+  "packageChecks": {
+    "migrationBundled": true,
+    "queryEngineCount": 0
+  },
+  "databaseSummary": {
+    "shopCount": 1,
+    "productCount": 1,
+    "openingBalanceCount": 1,
+    "inventoryTransactionCount": 6,
+    "inventoryAdjustmentCount": 5,
+    "product": {
+      "id": "b79a3a17-ea69-4664-9a97-6c3fcaef1dda",
+      "productCode": "INV-SMOKE-001",
+      "name": "Inventory Smoke Product"
+    },
+    "quantityOnHand": 12,
+    "movements": [
+      {
+        "transactionType": "EXPIRY_OUT",
+        "quantity": -1,
+        "unitCost": 50.588235294117645,
+        "reasonCode": "EXPIRED"
+      },
+      {
+        "transactionType": "OPENING",
+        "quantity": 12,
+        "unitCost": 50,
+        "reasonCode": "PRODUCT_OPENING_BALANCE"
+      },
+      {
+        "transactionType": "ADJUSTMENT_IN",
+        "quantity": 5,
+        "unitCost": 52,
+        "reasonCode": "SMOKE_IN"
+      },
+      {
+        "transactionType": "ADJUSTMENT_OUT",
+        "quantity": -2,
+        "unitCost": 50.588235294117645,
+        "reasonCode": "SMOKE_OUT"
+      },
+      {
+        "transactionType": "DAMAGE_OUT",
+        "quantity": -1,
+        "unitCost": 50.588235294117645,
+        "reasonCode": "DAMAGED"
+      },
+      {
+        "transactionType": "LOSS_OUT",
+        "quantity": -1,
+        "unitCost": 50.588235294117645,
+        "reasonCode": "LOST"
+      }
+    ],
+    "foreignKeyViolations": 0
+  },
+  "consoleMessages": []
+}

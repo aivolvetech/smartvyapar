@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "appVersion": "30.0.9",
+  "timestamp": "2026-08-02T05:55:19.061Z",
+  "fileSize": 24576,
+  "checksum": "596a24d9b7302a23ca84a79544ab8ae73b768ee513d3b69bc5f29902be4b5383",
+  "cipher": {
+    "algorithm": "SQLCipher",
+    "pageSize": 4096
+  }
+}

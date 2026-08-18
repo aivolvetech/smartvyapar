@@ -1,0 +1,52 @@
+{
+  "shopCount": 1,
+  "productCount": 1,
+  "openingBalanceCount": 1,
+  "inventoryTransactionCount": 6,
+  "inventoryAdjustmentCount": 5,
+  "product": {
+    "id": "b79a3a17-ea69-4664-9a97-6c3fcaef1dda",
+    "productCode": "INV-SMOKE-001",
+    "name": "Inventory Smoke Product"
+  },
+  "quantityOnHand": 12,
+  "movements": [
+    {
+      "transactionType": "EXPIRY_OUT",
+      "quantity": -1,
+      "unitCost": 50.588235294117645,
+      "reasonCode": "EXPIRED"
+    },
+    {
+      "transactionType": "OPENING",
+      "quantity": 12,
+      "unitCost": 50,
+      "reasonCode": "PRODUCT_OPENING_BALANCE"
+    },
+    {
+      "transactionType": "ADJUSTMENT_IN",
+      "quantity": 5,
+      "unitCost": 52,
+      "reasonCode": "SMOKE_IN"
+    },
+    {
+      "transactionType": "ADJUSTMENT_OUT",
+      "quantity": -2,
+      "unitCost": 50.588235294117645,
+      "reasonCode": "SMOKE_OUT"
+    },
+    {
+      "transactionType": "DAMAGE_OUT",
+      "quantity": -1,
+      "unitCost": 50.588235294117645,
+      "reasonCode": "DAMAGED"
+    },
+    {
+      "transactionType": "LOSS_OUT",
+      "quantity": -1,
+      "unitCost": 50.588235294117645,
+      "reasonCode": "LOST"
+    }
+  ],
+  "foreignKeyViolations": 0
+}

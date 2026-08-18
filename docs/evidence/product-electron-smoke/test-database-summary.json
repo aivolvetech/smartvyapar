@@ -1,0 +1,27 @@
+{
+  "shopCount": 1,
+  "unitCount": 8,
+  "taxRateCount": 8,
+  "categoryCount": 1,
+  "brandCount": 1,
+  "productCount": 1,
+  "product": {
+    "productCode": "PKG-PROD-001",
+    "name": "Packaged Smoke Product Edited",
+    "isActive": true
+  },
+  "price": {
+    "sellingPrice": 255,
+    "mrp": 260,
+    "isActive": 1
+  },
+  "barcode": {
+    "barcode": "989898989801",
+    "isPrimary": true,
+    "isActive": true
+  },
+  "openingBalance": {
+    "quantity": 12,
+    "unitCost": 210
+  }
+}

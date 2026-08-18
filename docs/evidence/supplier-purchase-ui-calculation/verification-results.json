@@ -1,0 +1,1058 @@
+{
+  "label": "Phase 5 UI and Calculation Verification report",
+  "capturedAt": "2026-08-02T13:37:57.105Z",
+  "isolatedUserDataPath": "test-data/electron-purchase-smoke-1785677819207/user-data",
+  "packagedExecutablePath": "dist-package/win-unpacked/Smart Vyapar.exe",
+  "screenshots": [
+    "docs/evidence/supplier-purchase-ui-calculation/01-setup-shop.png",
+    "docs/evidence/supplier-purchase-ui-calculation/02-shop-settings-visual.png",
+    "docs/evidence/supplier-purchase-ui-calculation/03-supplier-list.png",
+    "docs/evidence/supplier-purchase-ui-calculation/04-create-supplier.png",
+    "docs/evidence/supplier-purchase-ui-calculation/05-validation-errors.png",
+    "docs/evidence/supplier-purchase-ui-calculation/06-format-validation-errors.png",
+    "docs/evidence/supplier-purchase-ui-calculation/07-saved-supplier-list.png",
+    "docs/evidence/supplier-purchase-ui-calculation/08-duplicate-code-error.png",
+    "docs/evidence/supplier-purchase-ui-calculation/09-supplier-view.png",
+    "docs/evidence/supplier-purchase-ui-calculation/10-edit-supplier.png",
+    "docs/evidence/supplier-purchase-ui-calculation/11-purchase-list.png",
+    "docs/evidence/supplier-purchase-ui-calculation/12-create-purchase.png",
+    "docs/evidence/supplier-purchase-ui-calculation/13-inactive-supplier-state.png",
+    "docs/evidence/supplier-purchase-ui-calculation/14-purchase-list-final.png",
+    "docs/evidence/supplier-purchase-ui-calculation/15-create-purchase-editor.png",
+    "docs/evidence/supplier-purchase-ui-calculation/16-posted-purchase-view.png",
+    "docs/evidence/supplier-purchase-ui-calculation/17-cancelled-purchase-view.png",
+    "docs/evidence/supplier-purchase-ui-calculation/18-full-window-1366x768-view.png"
+  ],
+  "checkpoints": [
+    {
+      "name": "Database initialized and dashboard loaded",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier List opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Create Supplier form opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Required-field validation triggered",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Format validations triggered",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier save works and returns to list",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Saved Supplier appears in list",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Duplicate Supplier Code error triggered",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Pagination works: totalItems = 6",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Pagination works: totalPages = 2",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier View opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier View displays correct outstanding",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Edit Supplier screen opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier Edit persists",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier Edit displays updated name in list",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier deactivation works",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Purchase List opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Create Purchase screen opens",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Inactive supplier excluded from select",
+      "status": "PASS",
+      "notes": "Dropdown: [\"SUP-A\",\"SUP-C\",\"SUP-D\",\"SUP-E\",\"SUP-F\"]"
+    },
+    {
+      "name": "Case A: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case A: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":9,\"cgstAmount\":90,\"sgstRate\":9,\"sgstAmount\":90,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1180}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180}, Service: {\"id\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000001\",\"supplierInvoiceNumber\":\"SMOKE-INV-A\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:16.806Z\",\"updatedAt\":\"2026-08-02T13:37:16.808Z\",\"version\":2}"
+    },
+    {
+      "name": "Case A: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000001\",\"supplierInvoiceNumber\":\"SMOKE-INV-A\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:16.806Z\",\"updatedAt\":\"2026-08-02T13:37:16.808Z\",\"version\":2}, DB: {\"id\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000001\",\"supplierInvoiceNumber\":\"SMOKE-INV-A\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:16.806Z\",\"updatedAt\":\"2026-08-02T13:37:16.808Z\",\"version\":2}"
+    },
+    {
+      "name": "Case A: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1180, Got=1180"
+    },
+    {
+      "name": "Case B: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case B: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":0,\"cgstAmount\":0,\"sgstRate\":0,\"sgstAmount\":0,\"igstRate\":18,\"igstAmount\":180,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1180}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":180,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180}, Service: {\"id\":\"d4e77a56-1c22-4530-bde0-d93393754f92\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"e066b9ae-feec-4475-b5cc-ea8622427baf\",\"purchaseNumber\":\"PUR-2026-000002\",\"supplierInvoiceNumber\":\"SMOKE-INV-B\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":180,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:17.999Z\",\"updatedAt\":\"2026-08-02T13:37:18.001Z\",\"version\":2}"
+    },
+    {
+      "name": "Case B: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"d4e77a56-1c22-4530-bde0-d93393754f92\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"e066b9ae-feec-4475-b5cc-ea8622427baf\",\"purchaseNumber\":\"PUR-2026-000002\",\"supplierInvoiceNumber\":\"SMOKE-INV-B\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":180,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:17.999Z\",\"updatedAt\":\"2026-08-02T13:37:18.001Z\",\"version\":2}, DB: {\"id\":\"d4e77a56-1c22-4530-bde0-d93393754f92\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"e066b9ae-feec-4475-b5cc-ea8622427baf\",\"purchaseNumber\":\"PUR-2026-000002\",\"supplierInvoiceNumber\":\"SMOKE-INV-B\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":180,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:17.999Z\",\"updatedAt\":\"2026-08-02T13:37:18.001Z\",\"version\":2}"
+    },
+    {
+      "name": "Case B: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1180, Got=1180"
+    },
+    {
+      "name": "Case C: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case C: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":5,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":200,\"mrp\":400,\"discountType\":\"PERCENT\",\"discountValue\":10,\"discountAmount\":100,\"taxableAmount\":900,\"cgstRate\":9,\"cgstAmount\":81,\"sgstRate\":9,\"sgstAmount\":81,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1062}],\"subtotal\":1000,\"lineDiscountTotal\":100,\"invoiceDiscountTotal\":0,\"taxableAmount\":900,\"cgstTotal\":81,\"sgstTotal\":81,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1062}, Service: {\"id\":\"ddb64ec5-a4ef-4cea-9be4-34da2d20f2ee\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000003\",\"supplierInvoiceNumber\":\"SMOKE-INV-C\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":100,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":900,\"cgstTotal\":81,\"sgstTotal\":81,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1062,\"paidAmount\":0,\"outstandingAmount\":1062,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:19.377Z\",\"updatedAt\":\"2026-08-02T13:37:19.379Z\",\"version\":2}"
+    },
+    {
+      "name": "Case C: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"ddb64ec5-a4ef-4cea-9be4-34da2d20f2ee\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000003\",\"supplierInvoiceNumber\":\"SMOKE-INV-C\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":100,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":900,\"cgstTotal\":81,\"sgstTotal\":81,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1062,\"paidAmount\":0,\"outstandingAmount\":1062,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:19.377Z\",\"updatedAt\":\"2026-08-02T13:37:19.379Z\",\"version\":2}, DB: {\"id\":\"ddb64ec5-a4ef-4cea-9be4-34da2d20f2ee\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000003\",\"supplierInvoiceNumber\":\"SMOKE-INV-C\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":100,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":900,\"cgstTotal\":81,\"sgstTotal\":81,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1062,\"paidAmount\":0,\"outstandingAmount\":1062,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:19.377Z\",\"updatedAt\":\"2026-08-02T13:37:19.379Z\",\"version\":2}"
+    },
+    {
+      "name": "Case C: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=900, Got=900; Exp Grand=1062, Got=1062"
+    },
+    {
+      "name": "Case D: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case D: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"aa822913-901c-4e89-881e-f911f51ac29e\",\"productCodeSnapshot\":\"PROD-D\",\"productNameSnapshot\":\"Product PROD-D\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-12\",\"taxRateSnapshot\":12,\"quantity\":4,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":250,\"mrp\":500,\"discountType\":\"AMOUNT\",\"discountValue\":150,\"discountAmount\":150,\"taxableAmount\":850,\"cgstRate\":6,\"cgstAmount\":51,\"sgstRate\":6,\"sgstAmount\":51,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":952}],\"subtotal\":1000,\"lineDiscountTotal\":150,\"invoiceDiscountTotal\":0,\"taxableAmount\":850,\"cgstTotal\":51,\"sgstTotal\":51,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":952}, Service: {\"id\":\"0b54d209-d40f-41bd-9708-11cb0e27188d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000004\",\"supplierInvoiceNumber\":\"SMOKE-INV-D\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":150,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":850,\"cgstTotal\":51,\"sgstTotal\":51,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":952,\"paidAmount\":0,\"outstandingAmount\":952,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:20.592Z\",\"updatedAt\":\"2026-08-02T13:37:20.595Z\",\"version\":2}"
+    },
+    {
+      "name": "Case D: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"0b54d209-d40f-41bd-9708-11cb0e27188d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000004\",\"supplierInvoiceNumber\":\"SMOKE-INV-D\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":150,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":850,\"cgstTotal\":51,\"sgstTotal\":51,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":952,\"paidAmount\":0,\"outstandingAmount\":952,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:20.592Z\",\"updatedAt\":\"2026-08-02T13:37:20.595Z\",\"version\":2}, DB: {\"id\":\"0b54d209-d40f-41bd-9708-11cb0e27188d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000004\",\"supplierInvoiceNumber\":\"SMOKE-INV-D\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":150,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":850,\"cgstTotal\":51,\"sgstTotal\":51,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":952,\"paidAmount\":0,\"outstandingAmount\":952,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:20.592Z\",\"updatedAt\":\"2026-08-02T13:37:20.595Z\",\"version\":2}"
+    },
+    {
+      "name": "Case D: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=850, Got=850; Exp Grand=952, Got=952"
+    },
+    {
+      "name": "Case E: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case E: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"bad7319d-f87e-4bb4-988d-674771752817\",\"productCodeSnapshot\":\"PROD-E1\",\"productNameSnapshot\":\"Product PROD-E1\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":2,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":500,\"mrp\":1000,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":9,\"cgstAmount\":90,\"sgstRate\":9,\"sgstAmount\":90,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1180},{\"productId\":\"40e6bbb8-877e-4c23-a312-92ea89249e77\",\"productCodeSnapshot\":\"PROD-E2\",\"productNameSnapshot\":\"Product PROD-E2\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-5\",\"taxRateSnapshot\":5,\"quantity\":5,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":500,\"cgstRate\":2.5,\"cgstAmount\":12.5,\"sgstRate\":2.5,\"sgstAmount\":12.5,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":525}],\"subtotal\":1500,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1500,\"cgstTotal\":102.5,\"sgstTotal\":102.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1705}, Service: {\"id\":\"63b9aafe-5649-4f26-bc5d-d81189b93e19\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000005\",\"supplierInvoiceNumber\":\"SMOKE-INV-E\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1500,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1500,\"cgstTotal\":102.5,\"sgstTotal\":102.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1705,\"paidAmount\":0,\"outstandingAmount\":1705,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:21.713Z\",\"updatedAt\":\"2026-08-02T13:37:21.715Z\",\"version\":2}"
+    },
+    {
+      "name": "Case E: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"63b9aafe-5649-4f26-bc5d-d81189b93e19\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000005\",\"supplierInvoiceNumber\":\"SMOKE-INV-E\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1500,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1500,\"cgstTotal\":102.5,\"sgstTotal\":102.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1705,\"paidAmount\":0,\"outstandingAmount\":1705,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:21.713Z\",\"updatedAt\":\"2026-08-02T13:37:21.715Z\",\"version\":2}, DB: {\"id\":\"63b9aafe-5649-4f26-bc5d-d81189b93e19\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000005\",\"supplierInvoiceNumber\":\"SMOKE-INV-E\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1500,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1500,\"cgstTotal\":102.5,\"sgstTotal\":102.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1705,\"paidAmount\":0,\"outstandingAmount\":1705,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:21.713Z\",\"updatedAt\":\"2026-08-02T13:37:21.715Z\",\"version\":2}"
+    },
+    {
+      "name": "Case E: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1500, Got=1500; Exp Taxable=1500, Got=1500; Exp Grand=1705, Got=1705"
+    },
+    {
+      "name": "Case F: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case F: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":900,\"cgstRate\":9,\"cgstAmount\":81,\"sgstRate\":9,\"sgstAmount\":81,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1062},{\"productId\":\"aa822913-901c-4e89-881e-f911f51ac29e\",\"productCodeSnapshot\":\"PROD-D\",\"productNameSnapshot\":\"Product PROD-D\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":5,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":50,\"mrp\":100,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":225,\"cgstRate\":9,\"cgstAmount\":20.25,\"sgstRate\":9,\"sgstAmount\":20.25,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":265.5}],\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":125,\"taxableAmount\":1125,\"cgstTotal\":101.25,\"sgstTotal\":101.25,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":1328}, Service: {\"id\":\"ed713c61-fc54-4490-84f7-7eb6874112be\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000006\",\"supplierInvoiceNumber\":\"SMOKE-INV-F\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"PERCENT\",\"invoiceDiscountValue\":10,\"invoiceDiscountTotal\":125,\"taxableAmount\":1125,\"cgstTotal\":101.25,\"sgstTotal\":101.25,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":1328,\"paidAmount\":0,\"outstandingAmount\":1328,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:22.918Z\",\"updatedAt\":\"2026-08-02T13:37:22.920Z\",\"version\":2}"
+    },
+    {
+      "name": "Case F: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"ed713c61-fc54-4490-84f7-7eb6874112be\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000006\",\"supplierInvoiceNumber\":\"SMOKE-INV-F\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"PERCENT\",\"invoiceDiscountValue\":10,\"invoiceDiscountTotal\":125,\"taxableAmount\":1125,\"cgstTotal\":101.25,\"sgstTotal\":101.25,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":1328,\"paidAmount\":0,\"outstandingAmount\":1328,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:22.918Z\",\"updatedAt\":\"2026-08-02T13:37:22.920Z\",\"version\":2}, DB: {\"id\":\"ed713c61-fc54-4490-84f7-7eb6874112be\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000006\",\"supplierInvoiceNumber\":\"SMOKE-INV-F\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"PERCENT\",\"invoiceDiscountValue\":10,\"invoiceDiscountTotal\":125,\"taxableAmount\":1125,\"cgstTotal\":101.25,\"sgstTotal\":101.25,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":1328,\"paidAmount\":0,\"outstandingAmount\":1328,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:22.918Z\",\"updatedAt\":\"2026-08-02T13:37:22.920Z\",\"version\":2}"
+    },
+    {
+      "name": "Case F: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1250, Got=1250; Exp Taxable=1125, Got=1125; Exp Grand=1328, Got=1328"
+    },
+    {
+      "name": "Case G: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case G: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":880,\"cgstRate\":9,\"cgstAmount\":79.2,\"sgstRate\":9,\"sgstAmount\":79.2,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1038.4},{\"productId\":\"aa822913-901c-4e89-881e-f911f51ac29e\",\"productCodeSnapshot\":\"PROD-D\",\"productNameSnapshot\":\"Product PROD-D\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":5,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":50,\"mrp\":100,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":220,\"cgstRate\":9,\"cgstAmount\":19.8,\"sgstRate\":9,\"sgstAmount\":19.8,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":259.6}],\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":150,\"taxableAmount\":1100,\"cgstTotal\":99,\"sgstTotal\":99,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1298}, Service: {\"id\":\"9df1c6b8-b265-4e9f-b18a-e2c6c2324471\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000007\",\"supplierInvoiceNumber\":\"SMOKE-INV-G\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"AMOUNT\",\"invoiceDiscountValue\":150,\"invoiceDiscountTotal\":150,\"taxableAmount\":1100,\"cgstTotal\":99,\"sgstTotal\":99,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1298,\"paidAmount\":0,\"outstandingAmount\":1298,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:24.227Z\",\"updatedAt\":\"2026-08-02T13:37:24.230Z\",\"version\":2}"
+    },
+    {
+      "name": "Case G: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"9df1c6b8-b265-4e9f-b18a-e2c6c2324471\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000007\",\"supplierInvoiceNumber\":\"SMOKE-INV-G\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"AMOUNT\",\"invoiceDiscountValue\":150,\"invoiceDiscountTotal\":150,\"taxableAmount\":1100,\"cgstTotal\":99,\"sgstTotal\":99,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1298,\"paidAmount\":0,\"outstandingAmount\":1298,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:24.227Z\",\"updatedAt\":\"2026-08-02T13:37:24.230Z\",\"version\":2}, DB: {\"id\":\"9df1c6b8-b265-4e9f-b18a-e2c6c2324471\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000007\",\"supplierInvoiceNumber\":\"SMOKE-INV-G\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1250,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"AMOUNT\",\"invoiceDiscountValue\":150,\"invoiceDiscountTotal\":150,\"taxableAmount\":1100,\"cgstTotal\":99,\"sgstTotal\":99,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1298,\"paidAmount\":0,\"outstandingAmount\":1298,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:24.227Z\",\"updatedAt\":\"2026-08-02T13:37:24.230Z\",\"version\":2}"
+    },
+    {
+      "name": "Case G: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1250, Got=1250; Exp Taxable=1100, Got=1100; Exp Grand=1298, Got=1298"
+    },
+    {
+      "name": "Case H: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case H: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"8f542506-37ba-4012-8e6b-3d8c3abfb1a1\",\"productCodeSnapshot\":\"PROD-EX\",\"productNameSnapshot\":\"Product PROD-EX\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-exempt\",\"taxRateSnapshot\":0,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":0,\"cgstAmount\":0,\"sgstRate\":0,\"sgstAmount\":0,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1000}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000}, Service: {\"id\":\"9a75c847-abb2-434b-a101-c6c3f871ee99\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000008\",\"supplierInvoiceNumber\":\"SMOKE-INV-H\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:25.694Z\",\"updatedAt\":\"2026-08-02T13:37:25.695Z\",\"version\":2}"
+    },
+    {
+      "name": "Case H: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"9a75c847-abb2-434b-a101-c6c3f871ee99\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000008\",\"supplierInvoiceNumber\":\"SMOKE-INV-H\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:25.694Z\",\"updatedAt\":\"2026-08-02T13:37:25.695Z\",\"version\":2}, DB: {\"id\":\"9a75c847-abb2-434b-a101-c6c3f871ee99\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000008\",\"supplierInvoiceNumber\":\"SMOKE-INV-H\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:25.694Z\",\"updatedAt\":\"2026-08-02T13:37:25.695Z\",\"version\":2}"
+    },
+    {
+      "name": "Case H: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1000, Got=1000"
+    },
+    {
+      "name": "Case I: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case I: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"5f5227bd-0cbb-4a3d-ade1-25e08ce3f44f\",\"productCodeSnapshot\":\"PROD-ZR\",\"productNameSnapshot\":\"Product PROD-ZR\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-zero\",\"taxRateSnapshot\":0,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":0,\"cgstAmount\":0,\"sgstRate\":0,\"sgstAmount\":0,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1000}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000}, Service: {\"id\":\"558465b2-f614-42b2-b3e1-8dd2861bff57\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000009\",\"supplierInvoiceNumber\":\"SMOKE-INV-I\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:26.881Z\",\"updatedAt\":\"2026-08-02T13:37:26.881Z\",\"version\":2}"
+    },
+    {
+      "name": "Case I: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"558465b2-f614-42b2-b3e1-8dd2861bff57\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000009\",\"supplierInvoiceNumber\":\"SMOKE-INV-I\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:26.881Z\",\"updatedAt\":\"2026-08-02T13:37:26.881Z\",\"version\":2}, DB: {\"id\":\"558465b2-f614-42b2-b3e1-8dd2861bff57\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000009\",\"supplierInvoiceNumber\":\"SMOKE-INV-I\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:26.881Z\",\"updatedAt\":\"2026-08-02T13:37:26.881Z\",\"version\":2}"
+    },
+    {
+      "name": "Case I: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1000, Got=1000"
+    },
+    {
+      "name": "Case J: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case J: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"3cec60e0-edc7-43a1-94b8-705d8e609e3b\",\"productCodeSnapshot\":\"PROD-NG\",\"productNameSnapshot\":\"Product PROD-NG\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-nongst\",\"taxRateSnapshot\":0,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":0,\"cgstAmount\":0,\"sgstRate\":0,\"sgstAmount\":0,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1000}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000}, Service: {\"id\":\"9c682ce6-f16c-49b3-90e0-613f2759dd91\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000010\",\"supplierInvoiceNumber\":\"SMOKE-INV-J\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:28.028Z\",\"updatedAt\":\"2026-08-02T13:37:28.029Z\",\"version\":2}"
+    },
+    {
+      "name": "Case J: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"9c682ce6-f16c-49b3-90e0-613f2759dd91\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000010\",\"supplierInvoiceNumber\":\"SMOKE-INV-J\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:28.028Z\",\"updatedAt\":\"2026-08-02T13:37:28.029Z\",\"version\":2}, DB: {\"id\":\"9c682ce6-f16c-49b3-90e0-613f2759dd91\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000010\",\"supplierInvoiceNumber\":\"SMOKE-INV-J\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":0,\"sgstTotal\":0,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1000,\"paidAmount\":0,\"outstandingAmount\":1000,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:28.028Z\",\"updatedAt\":\"2026-08-02T13:37:28.029Z\",\"version\":2}"
+    },
+    {
+      "name": "Case J: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1000, Got=1000"
+    },
+    {
+      "name": "Case K: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case K: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"276ba2e6-15fe-4b4d-a077-cdd85d7c1c1c\",\"productCodeSnapshot\":\"PROD-CESS\",\"productNameSnapshot\":\"Product PROD-CESS\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-cess-15\",\"taxRateSnapshot\":28,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":14,\"cgstAmount\":140,\"sgstRate\":14,\"sgstAmount\":140,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":15,\"cessAmount\":150,\"lineTotal\":1430}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":140,\"sgstTotal\":140,\"igstTotal\":0,\"cessTotal\":150,\"roundOff\":0,\"grandTotal\":1430}, Service: {\"id\":\"0298b20c-ea7d-48b5-99c8-95b1a304b053\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000011\",\"supplierInvoiceNumber\":\"SMOKE-INV-K\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":140,\"sgstTotal\":140,\"igstTotal\":0,\"cessTotal\":150,\"roundOff\":0,\"grandTotal\":1430,\"paidAmount\":0,\"outstandingAmount\":1430,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:29.268Z\",\"updatedAt\":\"2026-08-02T13:37:29.268Z\",\"version\":2}"
+    },
+    {
+      "name": "Case K: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"0298b20c-ea7d-48b5-99c8-95b1a304b053\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000011\",\"supplierInvoiceNumber\":\"SMOKE-INV-K\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":140,\"sgstTotal\":140,\"igstTotal\":0,\"cessTotal\":150,\"roundOff\":0,\"grandTotal\":1430,\"paidAmount\":0,\"outstandingAmount\":1430,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:29.268Z\",\"updatedAt\":\"2026-08-02T13:37:29.268Z\",\"version\":2}, DB: {\"id\":\"0298b20c-ea7d-48b5-99c8-95b1a304b053\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000011\",\"supplierInvoiceNumber\":\"SMOKE-INV-K\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":140,\"sgstTotal\":140,\"igstTotal\":0,\"cessTotal\":150,\"roundOff\":0,\"grandTotal\":1430,\"paidAmount\":0,\"outstandingAmount\":1430,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:29.268Z\",\"updatedAt\":\"2026-08-02T13:37:29.268Z\",\"version\":2}"
+    },
+    {
+      "name": "Case K: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1430, Got=1430"
+    },
+    {
+      "name": "Case K: Cess rate is snapshotted as 15%",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case K: Cess amount is snapshotted as 150",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case L: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case L: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":1,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100.42,\"mrp\":200.84,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":100.42,\"cgstRate\":9,\"cgstAmount\":9.04,\"sgstRate\":9,\"sgstAmount\":9.04,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":118.5}],\"subtotal\":100.42,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":100.42,\"cgstTotal\":9.04,\"sgstTotal\":9.04,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":119}, Service: {\"id\":\"b19bf966-9006-403a-a29a-c7618edae56c\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000012\",\"supplierInvoiceNumber\":\"SMOKE-INV-L\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":100.42,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":100.42,\"cgstTotal\":9.04,\"sgstTotal\":9.04,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":119,\"paidAmount\":0,\"outstandingAmount\":119,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:30.773Z\",\"updatedAt\":\"2026-08-02T13:37:30.774Z\",\"version\":2}"
+    },
+    {
+      "name": "Case L: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"b19bf966-9006-403a-a29a-c7618edae56c\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000012\",\"supplierInvoiceNumber\":\"SMOKE-INV-L\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":100.42,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":100.42,\"cgstTotal\":9.04,\"sgstTotal\":9.04,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":119,\"paidAmount\":0,\"outstandingAmount\":119,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:30.773Z\",\"updatedAt\":\"2026-08-02T13:37:30.774Z\",\"version\":2}, DB: {\"id\":\"b19bf966-9006-403a-a29a-c7618edae56c\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000012\",\"supplierInvoiceNumber\":\"SMOKE-INV-L\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":100.42,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":100.42,\"cgstTotal\":9.04,\"sgstTotal\":9.04,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0.5,\"grandTotal\":119,\"paidAmount\":0,\"outstandingAmount\":119,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:30.773Z\",\"updatedAt\":\"2026-08-02T13:37:30.774Z\",\"version\":2}"
+    },
+    {
+      "name": "Case L: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=100.42, Got=100.42; Exp Taxable=100.42, Got=100.42; Exp Grand=119, Got=119"
+    },
+    {
+      "name": "Case M (Rejection): Preview or Service fails",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case M (Rejection): No database record created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case N: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case N: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCodeSnapshot\":\"PROD-A\",\"productNameSnapshot\":\"Product PROD-A\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":1.5,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":150,\"cgstRate\":9,\"cgstAmount\":13.5,\"sgstRate\":9,\"sgstAmount\":13.5,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":177}],\"subtotal\":150,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":150,\"cgstTotal\":13.5,\"sgstTotal\":13.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":177}, Service: {\"id\":\"428e2bdb-ed46-428c-b41c-4b9559d0e97a\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000013\",\"supplierInvoiceNumber\":\"SMOKE-INV-N\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":150,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":150,\"cgstTotal\":13.5,\"sgstTotal\":13.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":177,\"paidAmount\":0,\"outstandingAmount\":177,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:32.444Z\",\"updatedAt\":\"2026-08-02T13:37:32.447Z\",\"version\":2}"
+    },
+    {
+      "name": "Case N: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"428e2bdb-ed46-428c-b41c-4b9559d0e97a\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000013\",\"supplierInvoiceNumber\":\"SMOKE-INV-N\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":150,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":150,\"cgstTotal\":13.5,\"sgstTotal\":13.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":177,\"paidAmount\":0,\"outstandingAmount\":177,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:32.444Z\",\"updatedAt\":\"2026-08-02T13:37:32.447Z\",\"version\":2}, DB: {\"id\":\"428e2bdb-ed46-428c-b41c-4b9559d0e97a\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"purchaseNumber\":\"PUR-2026-000013\",\"supplierInvoiceNumber\":\"SMOKE-INV-N\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":150,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":150,\"cgstTotal\":13.5,\"sgstTotal\":13.5,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":177,\"paidAmount\":0,\"outstandingAmount\":177,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:32.444Z\",\"updatedAt\":\"2026-08-02T13:37:32.447Z\",\"version\":2}"
+    },
+    {
+      "name": "Case N: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=150, Got=150; Exp Taxable=150, Got=150; Exp Grand=177, Got=177"
+    },
+    {
+      "name": "Case O: Draft saved successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Case O: Preview matches Service Result",
+      "status": "PASS",
+      "notes": "Preview: {\"lines\":[{\"productId\":\"181e2eb2-2f51-42e2-a000-4e43e5fa14dd\",\"productCodeSnapshot\":\"PROD-SVC\",\"productNameSnapshot\":\"Product PROD-SVC\",\"hsnSacCodeSnapshot\":null,\"taxRateId\":\"tax-gst-18\",\"taxRateSnapshot\":18,\"quantity\":10,\"unitId\":\"uom-pcs\",\"unitNameSnapshot\":\"PCS\",\"unitPrice\":100,\"mrp\":200,\"discountType\":\"NONE\",\"discountValue\":0,\"discountAmount\":0,\"taxableAmount\":1000,\"cgstRate\":9,\"cgstAmount\":90,\"sgstRate\":9,\"sgstAmount\":90,\"igstRate\":0,\"igstAmount\":0,\"cessRate\":0,\"cessAmount\":0,\"lineTotal\":1180}],\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180}, Service: {\"id\":\"da57c0a6-a24f-4a58-ad36-e97a9669e80d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"36991f68-389e-474e-9fd1-681532c131d4\",\"purchaseNumber\":\"PUR-2026-000014\",\"supplierInvoiceNumber\":\"SMOKE-INV-O\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:33.612Z\",\"updatedAt\":\"2026-08-02T13:37:33.614Z\",\"version\":2}"
+    },
+    {
+      "name": "Case O: Service Result matches SQLite database",
+      "status": "PASS",
+      "notes": "Service: {\"id\":\"da57c0a6-a24f-4a58-ad36-e97a9669e80d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"36991f68-389e-474e-9fd1-681532c131d4\",\"purchaseNumber\":\"PUR-2026-000014\",\"supplierInvoiceNumber\":\"SMOKE-INV-O\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:33.612Z\",\"updatedAt\":\"2026-08-02T13:37:33.614Z\",\"version\":2}, DB: {\"id\":\"da57c0a6-a24f-4a58-ad36-e97a9669e80d\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"supplierId\":\"36991f68-389e-474e-9fd1-681532c131d4\",\"purchaseNumber\":\"PUR-2026-000014\",\"supplierInvoiceNumber\":\"SMOKE-INV-O\",\"invoiceDate\":\"2026-08-02\",\"dueDate\":\"2026-08-02\",\"status\":\"DRAFT\",\"subtotal\":1000,\"lineDiscountTotal\":0,\"invoiceDiscountType\":\"NONE\",\"invoiceDiscountValue\":0,\"invoiceDiscountTotal\":0,\"taxableAmount\":1000,\"cgstTotal\":90,\"sgstTotal\":90,\"igstTotal\":0,\"cessTotal\":0,\"roundOff\":0,\"grandTotal\":1180,\"paidAmount\":0,\"outstandingAmount\":1180,\"notes\":null,\"postedAt\":null,\"cancelledAt\":null,\"cancellationReason\":null,\"createdAt\":\"2026-08-02T13:37:33.612Z\",\"updatedAt\":\"2026-08-02T13:37:33.614Z\",\"version\":2}"
+    },
+    {
+      "name": "Case O: Math results match business expected targets",
+      "status": "PASS",
+      "notes": "Exp Sub=1000, Got=1000; Exp Taxable=1000, Got=1000; Exp Grand=1180, Got=1180"
+    },
+    {
+      "name": "Test Case O: Service line stock remains 0 after posting",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Before posting outstanding is 1200",
+      "status": "PASS",
+      "notes": "Got: {\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"totalDebits\":0,\"totalCredits\":1200,\"outstanding\":1200}"
+    },
+    {
+      "name": "Before posting stock is 0",
+      "status": "PASS",
+      "notes": "Got: {\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCode\":\"PROD-A\",\"productName\":\"Product PROD-A\",\"categoryName\":\"Verification Products\",\"primaryBarcode\":\"800000000001\",\"primaryUnit\":\"PCS\",\"quantityOnHand\":0,\"averageCost\":null,\"minimumStockLevel\":null,\"reorderLevel\":null,\"maximumStockLevel\":null,\"stockStatus\":\"OUT_OF_STOCK\",\"lastMovementAt\":null,\"productType\":\"GOODS\",\"trackInventory\":true,\"allowNegativeStock\":true,\"isActive\":true}"
+    },
+    {
+      "name": "After posting outstanding increases to 2380",
+      "status": "PASS",
+      "notes": "Got: {\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"totalDebits\":0,\"totalCredits\":2380,\"outstanding\":2380}"
+    },
+    {
+      "name": "After posting stock increases to 10",
+      "status": "PASS",
+      "notes": "Got: {\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCode\":\"PROD-A\",\"productName\":\"Product PROD-A\",\"categoryName\":\"Verification Products\",\"primaryBarcode\":\"800000000001\",\"primaryUnit\":\"PCS\",\"quantityOnHand\":10,\"averageCost\":100,\"minimumStockLevel\":null,\"reorderLevel\":null,\"maximumStockLevel\":null,\"stockStatus\":\"IN_STOCK\",\"lastMovementAt\":\"2026-08-02T00:00:00.000Z\",\"productType\":\"GOODS\",\"trackInventory\":true,\"allowNegativeStock\":true,\"isActive\":true}"
+    },
+    {
+      "name": "After cancellation outstanding is restored to 1200",
+      "status": "PASS",
+      "notes": "Got: {\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"totalDebits\":1180,\"totalCredits\":2380,\"outstanding\":1200}"
+    },
+    {
+      "name": "After cancellation stock is restored to 0",
+      "status": "PASS",
+      "notes": "Got: {\"productId\":\"603a100e-a8eb-4883-b2a6-7c3b87b4d6e4\",\"productCode\":\"PROD-A\",\"productName\":\"Product PROD-A\",\"categoryName\":\"Verification Products\",\"primaryBarcode\":\"800000000001\",\"primaryUnit\":\"PCS\",\"quantityOnHand\":0,\"averageCost\":100,\"minimumStockLevel\":null,\"reorderLevel\":null,\"maximumStockLevel\":null,\"stockStatus\":\"OUT_OF_STOCK\",\"lastMovementAt\":\"2026-08-02T13:37:35.000Z\",\"productType\":\"GOODS\",\"trackInventory\":true,\"allowNegativeStock\":true,\"isActive\":true}"
+    },
+    {
+      "name": "Reversal ledger entry for cancellation exists",
+      "status": "PASS",
+      "notes": "Got entries: [{\"id\":\"1be89541-4f24-40e2-83f7-077891572f9b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"OPENING_BALANCE\",\"referenceType\":\"SUPPLIER_OPENING\",\"referenceId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"referenceNumber\":null,\"debitAmount\":0,\"creditAmount\":1200,\"occurredAt\":\"2026-08-02T13:37:09.800Z\",\"notes\":\"Supplier opening balance.\",\"createdAt\":\"2026-08-02T13:37:09.800Z\"},{\"id\":\"53cf0351-5ec1-4094-99de-2bd17aa12038\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"PURCHASE_CANCELLATION\",\"referenceType\":\"PURCHASE_INVOICE\",\"referenceId\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"referenceNumber\":\"PUR-2026-000001\",\"debitAmount\":1180,\"creditAmount\":0,\"occurredAt\":\"2026-08-02T13:37:35.000Z\",\"notes\":\"Purchase cancelled: Verification Cancel\",\"createdAt\":\"2026-08-02T13:37:35.001Z\"},{\"id\":\"b32fc298-d212-4d4b-9b62-e8056653bc2d\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"PURCHASE\",\"referenceType\":\"PURCHASE_INVOICE\",\"referenceId\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"referenceNumber\":\"PUR-2026-000001\",\"debitAmount\":0,\"creditAmount\":1180,\"occurredAt\":\"2026-08-02T13:37:34.983Z\",\"notes\":\"Purchase invoice posted.\",\"createdAt\":\"2026-08-02T13:37:34.983Z\"}]"
+    },
+    {
+      "name": "Original opening balance entry remains preserved",
+      "status": "PASS",
+      "notes": "Got entries: [{\"id\":\"1be89541-4f24-40e2-83f7-077891572f9b\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"OPENING_BALANCE\",\"referenceType\":\"SUPPLIER_OPENING\",\"referenceId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"referenceNumber\":null,\"debitAmount\":0,\"creditAmount\":1200,\"occurredAt\":\"2026-08-02T13:37:09.800Z\",\"notes\":\"Supplier opening balance.\",\"createdAt\":\"2026-08-02T13:37:09.800Z\"},{\"id\":\"53cf0351-5ec1-4094-99de-2bd17aa12038\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"PURCHASE_CANCELLATION\",\"referenceType\":\"PURCHASE_INVOICE\",\"referenceId\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"referenceNumber\":\"PUR-2026-000001\",\"debitAmount\":1180,\"creditAmount\":0,\"occurredAt\":\"2026-08-02T13:37:35.000Z\",\"notes\":\"Purchase cancelled: Verification Cancel\",\"createdAt\":\"2026-08-02T13:37:35.001Z\"},{\"id\":\"b32fc298-d212-4d4b-9b62-e8056653bc2d\",\"supplierId\":\"02d7d4b6-aa01-4f56-9220-36e899193433\",\"shopId\":\"792137a5-817e-4d6d-b5f2-1eb56fa1da4b\",\"entryType\":\"PURCHASE\",\"referenceType\":\"PURCHASE_INVOICE\",\"referenceId\":\"734b8c14-e55b-4df6-a7d0-20ce09e46f20\",\"referenceNumber\":\"PUR-2026-000001\",\"debitAmount\":0,\"creditAmount\":1180,\"occurredAt\":\"2026-08-02T13:37:34.983Z\",\"notes\":\"Purchase invoice posted.\",\"createdAt\":\"2026-08-02T13:37:34.983Z\"}]"
+    }
+  ],
+  "defects": [],
+  "packageChecks": {
+    "migrationBundled": true,
+    "sqliteBundled": true,
+    "dpapiBundled": true,
+    "queryEngineCount": 0
+  },
+  "calculationMatrix": [
+    {
+      "caseId": "A",
+      "label": "Simple Intra-State GST",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      }
+    },
+    {
+      "caseId": "B",
+      "label": "Inter-State GST",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 180,
+        "cess": 0,
+        "grand": 1180
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 180,
+        "cess": 0,
+        "grand": 1180
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 180,
+        "cess": 0,
+        "grand": 1180
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 180,
+        "cess": 0,
+        "grand": 1180
+      }
+    },
+    {
+      "caseId": "C",
+      "label": "Percentage Line Discount",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 900,
+        "cgst": 81,
+        "sgst": 81,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1062
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 900,
+        "cgst": 81,
+        "sgst": 81,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1062
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 900,
+        "cgst": 81,
+        "sgst": 81,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1062
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 900,
+        "cgst": 81,
+        "sgst": 81,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1062
+      }
+    },
+    {
+      "caseId": "D",
+      "label": "Fixed Line Discount",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 850,
+        "cgst": 51,
+        "sgst": 51,
+        "igst": 0,
+        "cess": 0,
+        "grand": 952
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 850,
+        "cgst": 51,
+        "sgst": 51,
+        "igst": 0,
+        "cess": 0,
+        "grand": 952
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 850,
+        "cgst": 51,
+        "sgst": 51,
+        "igst": 0,
+        "cess": 0,
+        "grand": 952
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 850,
+        "cgst": 51,
+        "sgst": 51,
+        "igst": 0,
+        "cess": 0,
+        "grand": 952
+      }
+    },
+    {
+      "caseId": "E",
+      "label": "Multiple Lines",
+      "status": "PASS",
+      "expected": {
+        "base": 1500,
+        "taxable": 1500,
+        "cgst": 102.5,
+        "sgst": 102.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1705
+      },
+      "preview": {
+        "subtotal": 1500,
+        "taxable": 1500,
+        "cgst": 102.5,
+        "sgst": 102.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1705
+      },
+      "service": {
+        "subtotal": 1500,
+        "taxable": 1500,
+        "cgst": 102.5,
+        "sgst": 102.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1705
+      },
+      "database": {
+        "subtotal": 1500,
+        "taxable": 1500,
+        "cgst": 102.5,
+        "sgst": 102.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1705
+      }
+    },
+    {
+      "caseId": "F",
+      "label": "Invoice-Level Percentage Discount",
+      "status": "PASS",
+      "expected": {
+        "base": 1250,
+        "taxable": 1125,
+        "cgst": 101.25,
+        "sgst": 101.25,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1328
+      },
+      "preview": {
+        "subtotal": 1250,
+        "taxable": 1125,
+        "cgst": 101.25,
+        "sgst": 101.25,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1328
+      },
+      "service": {
+        "subtotal": 1250,
+        "taxable": 1125,
+        "cgst": 101.25,
+        "sgst": 101.25,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1328
+      },
+      "database": {
+        "subtotal": 1250,
+        "taxable": 1125,
+        "cgst": 101.25,
+        "sgst": 101.25,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1328
+      }
+    },
+    {
+      "caseId": "G",
+      "label": "Invoice-Level Fixed Discount",
+      "status": "PASS",
+      "expected": {
+        "base": 1250,
+        "taxable": 1100,
+        "cgst": 99,
+        "sgst": 99,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1298
+      },
+      "preview": {
+        "subtotal": 1250,
+        "taxable": 1100,
+        "cgst": 99,
+        "sgst": 99,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1298
+      },
+      "service": {
+        "subtotal": 1250,
+        "taxable": 1100,
+        "cgst": 99,
+        "sgst": 99,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1298
+      },
+      "database": {
+        "subtotal": 1250,
+        "taxable": 1100,
+        "cgst": 99,
+        "sgst": 99,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1298
+      }
+    },
+    {
+      "caseId": "H",
+      "label": "EXEMPT",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      }
+    },
+    {
+      "caseId": "I",
+      "label": "ZERO_RATED",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      }
+    },
+    {
+      "caseId": "J",
+      "label": "NON_GST",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 0,
+        "sgst": 0,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1000
+      }
+    },
+    {
+      "caseId": "K",
+      "label": "Cess",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 140,
+        "sgst": 140,
+        "igst": 0,
+        "cess": 150,
+        "grand": 1430
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 140,
+        "sgst": 140,
+        "igst": 0,
+        "cess": 150,
+        "grand": 1430
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 140,
+        "sgst": 140,
+        "igst": 0,
+        "cess": 150,
+        "grand": 1430
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 140,
+        "sgst": 140,
+        "igst": 0,
+        "cess": 150,
+        "grand": 1430
+      }
+    },
+    {
+      "caseId": "L",
+      "label": "Round-Off (.50 Round Up)",
+      "status": "PASS",
+      "expected": {
+        "base": 100.42,
+        "taxable": 100.42,
+        "cgst": 9.04,
+        "sgst": 9.04,
+        "igst": 0,
+        "cess": 0,
+        "grand": 119
+      },
+      "preview": {
+        "subtotal": 100.42,
+        "taxable": 100.42,
+        "cgst": 9.04,
+        "sgst": 9.04,
+        "igst": 0,
+        "cess": 0,
+        "grand": 119
+      },
+      "service": {
+        "subtotal": 100.42,
+        "taxable": 100.42,
+        "cgst": 9.04,
+        "sgst": 9.04,
+        "igst": 0,
+        "cess": 0,
+        "grand": 119
+      },
+      "database": {
+        "subtotal": 100.42,
+        "taxable": 100.42,
+        "cgst": 9.04,
+        "sgst": 9.04,
+        "igst": 0,
+        "cess": 0,
+        "grand": 119
+      }
+    },
+    {
+      "caseId": "M",
+      "label": "Invalid Discount (>100% Rejection)",
+      "status": "PASS",
+      "notes": "Rejected correctly. Service error: Discount percent cannot exceed 100.. DB Count: 0"
+    },
+    {
+      "caseId": "N",
+      "label": "Decimal Quantities",
+      "status": "PASS",
+      "expected": {
+        "base": 150,
+        "taxable": 150,
+        "cgst": 13.5,
+        "sgst": 13.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 177
+      },
+      "preview": {
+        "subtotal": 150,
+        "taxable": 150,
+        "cgst": 13.5,
+        "sgst": 13.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 177
+      },
+      "service": {
+        "subtotal": 150,
+        "taxable": 150,
+        "cgst": 13.5,
+        "sgst": 13.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 177
+      },
+      "database": {
+        "subtotal": 150,
+        "taxable": 150,
+        "cgst": 13.5,
+        "sgst": 13.5,
+        "igst": 0,
+        "cess": 0,
+        "grand": 177
+      }
+    },
+    {
+      "caseId": "O",
+      "label": "Service Product",
+      "status": "PASS",
+      "expected": {
+        "base": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "preview": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "service": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      },
+      "database": {
+        "subtotal": 1000,
+        "taxable": 1000,
+        "cgst": 90,
+        "sgst": 90,
+        "igst": 0,
+        "cess": 0,
+        "grand": 1180
+      }
+    }
+  ],
+  "consoleMessages": []
+}

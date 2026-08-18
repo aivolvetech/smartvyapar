@@ -1,0 +1,10 @@
+export type DatabaseStatus = 
+  | 'NOT_INITIALIZED'
+  | 'MIGRATING'
+  | 'CONNECTED'
+  | 'BACKUP_FAILED'
+  | 'MIGRATION_FAILED'
+  | 'CONNECTION_FAILED'
+  | 'WRONG_KEY'
+  | 'CORRUPTED'
+  | 'UNSUPPORTED_SCHEMA';

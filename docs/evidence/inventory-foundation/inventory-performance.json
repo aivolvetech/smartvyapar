@@ -1,0 +1,34 @@
+{
+  "capturedAt": "2026-08-02T09:04:54.741Z",
+  "productCount": 20000,
+  "transactionCount": 100000,
+  "seedMs": 11252.42,
+  "measurements": [
+    {
+      "name": "Single Product stock lookup",
+      "ms": 1.79,
+      "targetMs": 100
+    },
+    {
+      "name": "Paginated stock list",
+      "ms": 1053.47,
+      "targetMs": 250
+    },
+    {
+      "name": "Movement history page",
+      "ms": 2.32,
+      "targetMs": 250
+    },
+    {
+      "name": "Dashboard summary",
+      "ms": 839.97,
+      "targetMs": 300
+    }
+  ],
+  "sampleResults": {
+    "singleStock": 15,
+    "listItems": 50,
+    "movementItems": 5,
+    "trackedProducts": 20000
+  }
+}

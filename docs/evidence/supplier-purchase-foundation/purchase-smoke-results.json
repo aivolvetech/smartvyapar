@@ -1,0 +1,254 @@
+{
+  "label": "Real packaged Electron Supplier & Purchase Foundation smoke test",
+  "capturedAt": "2026-08-03T12:37:50.672Z",
+  "isolatedUserDataPath": "test-data/electron-purchase-smoke/user-data",
+  "packagedExecutablePath": "dist-package/win-unpacked/Smart Vyapar.exe",
+  "screenshots": [
+    "docs/evidence/supplier-purchase-foundation/01-shop-setup.png",
+    "docs/evidence/supplier-purchase-foundation/02-purchase-list.png"
+  ],
+  "checkpoints": [
+    {
+      "name": "Packaged app launches and creates Shop",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Tracked Product A created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Service Product S created",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Supplier SUP-A created with opening balance",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Stock of Product A before post is 0",
+      "status": "PASS",
+      "notes": "Initial stock: 0"
+    },
+    {
+      "name": "Supplier outstanding before post is 1200",
+      "status": "PASS",
+      "notes": "Initial outstanding: 1200"
+    },
+    {
+      "name": "Draft purchase created successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Draft subtotal matches",
+      "status": "PASS",
+      "notes": "Subtotal: 1250"
+    },
+    {
+      "name": "Draft taxableAmount matches",
+      "status": "PASS",
+      "notes": "Taxable: 1000"
+    },
+    {
+      "name": "Draft cgstTotal matches",
+      "status": "PASS",
+      "notes": "CGST: 90"
+    },
+    {
+      "name": "Draft sgstTotal matches",
+      "status": "PASS",
+      "notes": "SGST: 90"
+    },
+    {
+      "name": "Draft grandTotal matches",
+      "status": "PASS",
+      "notes": "Grand total: 1180"
+    },
+    {
+      "name": "Purchase posted successfully",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "PURCHASE_IN stock increase: Product A is 10",
+      "status": "PASS",
+      "notes": "Post stock: 10"
+    },
+    {
+      "name": "Service stock is unaffected (remains 0)",
+      "status": "PASS",
+      "notes": "Service stock: 0"
+    },
+    {
+      "name": "Supplier outstanding increase: Outstanding is 2380",
+      "status": "PASS",
+      "notes": "Post outstanding: 2380"
+    },
+    {
+      "name": "Posted Purchase immutability: Update fails",
+      "status": "PASS",
+      "notes": "Only draft purchases can be edited."
+    },
+    {
+      "name": "Posted Purchase immutability: Delete fails",
+      "status": "PASS",
+      "notes": "Only draft purchases can be deleted."
+    },
+    {
+      "name": "Duplicate posting rejection: Re-post fails",
+      "status": "PASS",
+      "notes": "Only draft purchases can be posted."
+    },
+    {
+      "name": "App closes",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Restart persistence: stock remains 10",
+      "status": "PASS",
+      "notes": "Stock: 10"
+    },
+    {
+      "name": "Restart persistence: outstanding remains 2380",
+      "status": "PASS",
+      "notes": "Outstanding: 2380"
+    },
+    {
+      "name": "Purchase cancellation succeeds",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Stock reversal: stock decreased to 0",
+      "status": "PASS",
+      "notes": "Cancel stock: 0"
+    },
+    {
+      "name": "Supplier payable reversal: outstanding decreased to 1200",
+      "status": "PASS",
+      "notes": "Cancel outstanding: 1200"
+    },
+    {
+      "name": "Duplicate cancellation rejection",
+      "status": "PASS",
+      "notes": "Only posted purchases can be cancelled."
+    },
+    {
+      "name": "Cancelled purchase repost rejection",
+      "status": "PASS",
+      "notes": "Only draft purchases can be posted."
+    },
+    {
+      "name": "Renderer security: No native leakage",
+      "status": "PASS",
+      "notes": "{\"requireType\":\"undefined\",\"processType\":\"undefined\",\"ipcRendererType\":\"undefined\",\"fsType\":\"undefined\",\"genericInvokeType\":\"undefined\",\"bodyLeaks\":false}"
+    },
+    {
+      "name": "Restart app closes",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "Phase 5 migration SQL bundled",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "SQLCipher native module bundled",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "DPAPI native module bundled",
+      "status": "PASS",
+      "notes": ""
+    },
+    {
+      "name": "query_engine_count=0",
+      "status": "PASS",
+      "notes": "Query engines found: 0"
+    },
+    {
+      "name": "No native module load errors",
+      "status": "PASS",
+      "notes": ""
+    }
+  ],
+  "defects": [],
+  "packageChecks": {
+    "migrationBundled": true,
+    "sqliteBundled": true,
+    "dpapiBundled": true,
+    "queryEngineCount": 0
+  },
+  "databaseSummary": {
+    "shopCount": 1,
+    "supplierCount": 1,
+    "purchaseInvoiceCount": 1,
+    "purchaseInvoiceLineCount": 2,
+    "supplierLedgerEntryCount": 3,
+    "documentSequenceCount": 1,
+    "supplier": {
+      "id": "48ebcbb0-945c-4a55-b0c5-a40215e9ee9e",
+      "supplierCode": "SUP-A",
+      "name": "Maharashtra Supplier A",
+      "openingBalance": 1200,
+      "openingBalanceType": "PAYABLE"
+    },
+    "supplierOutstanding": 1200,
+    "ledgerEntries": [
+      {
+        "entryType": "OPENING_BALANCE",
+        "creditAmount": 1200,
+        "debitAmount": 0,
+        "referenceType": "SUPPLIER_OPENING",
+        "referenceNumber": null
+      },
+      {
+        "entryType": "PURCHASE",
+        "creditAmount": 1180,
+        "debitAmount": 0,
+        "referenceType": "PURCHASE_INVOICE",
+        "referenceNumber": "PUR-2026-000001"
+      },
+      {
+        "entryType": "PURCHASE_CANCELLATION",
+        "creditAmount": 0,
+        "debitAmount": 1180,
+        "referenceType": "PURCHASE_INVOICE",
+        "referenceNumber": "PUR-2026-000001"
+      }
+    ],
+    "product": {
+      "id": "a1c4ea75-e307-4dde-8bec-f08b103e3317",
+      "productCode": "ITEM-A",
+      "name": "Tracked Product A"
+    },
+    "quantityOnHand": 0,
+    "inventoryTransactions": [
+      {
+        "transactionType": "PURCHASE_IN",
+        "quantity": 10,
+        "unitCost": 100,
+        "referenceType": "PURCHASE_INVOICE",
+        "referenceNumber": "PUR-2026-000001",
+        "reasonCode": "PURCHASE_IN"
+      },
+      {
+        "transactionType": "REVERSAL",
+        "quantity": -10,
+        "unitCost": 100,
+        "referenceType": "REVERSAL",
+        "referenceNumber": "PUR-2026-000001",
+        "reasonCode": "PURCHASE_CANCELLED"
+      }
+    ],
+    "foreignKeyViolations": 0
+  },
+  "consoleMessages": []
+}

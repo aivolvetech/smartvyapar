@@ -1,0 +1,37 @@
+import { Customer } from '../../../../shared/models/customer';
+
+export function mapRowToCustomer(row: any): Customer {
+  return {
+    id: row.id,
+    shopId: row.shopId,
+    customerCode: row.customerCode,
+    normalizedCustomerCode: row.normalizedCustomerCode,
+    name: row.name,
+    normalizedName: row.normalizedName,
+    customerType: row.customerType,
+    contactPerson: row.contactPerson || null,
+    phone: row.phone || null,
+    normalizedPhone: row.normalizedPhone || null,
+    alternatePhone: row.alternatePhone || null,
+    email: row.email || null,
+    gstNumber: row.gstNumber || null,
+    panNumber: row.panNumber || null,
+    billingAddressLine1: row.billingAddressLine1 || null,
+    billingAddressLine2: row.billingAddressLine2 || null,
+    shippingAddressLine1: row.shippingAddressLine1 || null,
+    shippingAddressLine2: row.shippingAddressLine2 || null,
+    city: row.city || null,
+    state: row.state || null,
+    postalCode: row.postalCode || null,
+    country: row.country || 'India',
+    paymentTermsDays: row.paymentTermsDays ?? 0,
+    creditLimit: row.creditLimit ?? 0,
+    priceBookId: row.priceBookId || null,
+    notes: row.notes || null,
+    isWalkIn: Boolean(row.isWalkIn),
+    isActive: Boolean(row.isActive),
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+    version: row.version ?? 1,
+  };
+}

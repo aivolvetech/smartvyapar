@@ -1,0 +1,78 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-electron/
+dist-package/
+dist-test/
+
+# Database files
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+*.log.*
+
+# Backup files
+*.bak
+*.svbackup
+*.backup
+
+# Environment / Secrets
+.env
+.env.*
+.env.local
+.env.*.local
+
+# DPAPI / Key files
+*.dpapi
+*.key
+*.keyblob
+
+# Prisma dev databases
+prisma/dev.db*
+prisma/dev-backup.db*
+prisma/dev-encrypted.db*
+prisma/*.db
+prisma/*.db-*
+
+# Local user data
+userData/
+
+# Temporary / scratch files
+scratch/
+err.txt
+err2.txt
+output.txt
+
+# Bundled build output (96KB generated file)
+main.js
+
+# Test data runtime artifacts
+test-data/temp-imports/
+test-data/electron-*-smoke*/
+test-data/customer-ui-smoke-userData/
+test-data/userData/
+test-data/*/smart-vyapar.db*
+test-data/*/*.safety-backup*
+test-data/*/security/
+*.bin
+
+# POC / Prototype experiments
+poc/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
