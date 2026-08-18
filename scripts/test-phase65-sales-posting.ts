@@ -1,0 +1,363 @@
+import './mock-electron';
+import fs from 'fs';
+import path from 'path';
+import { initializeDatabase } from '../electron/database/database-initializer';
+import { closeDatabaseConnection, getDatabaseConnection } from '../electron/database/database-connection';
+import { getDatabasePath, getPlainDatabasePath } from '../electron/database/database-paths';
+import { WindowsDpapiKeyProvider } from '../electron/security/windows-dpapi-key-provider';
+import { ShopRepository } from '../electron/database/repositories/shop.repository';
+import { CustomerRepository } from '../electron/database/repositories/customer.repository';
+import { CustomerService } from '../electron/services/customer.service';
+import { ProductRepository } from '../electron/database/repositories/product.repository';
+import { ProductService } from '../electron/services/product.service';
+import { UnitOfMeasureRepository } from '../electron/database/repositories/unit-of-measure.repository';
+import { TaxRateRepository } from '../electron/database/repositories/tax-rate.repository';
+import { ProductBarcodeRepository } from '../electron/database/repositories/product-barcode.repository';
+import { SalesService } from '../electron/services/sales.service';
+import { InventoryTransactionRepository } from '../electron/database/repositories/inventory-transaction.repository';
+
+function assert(condition: boolean, msg: string) {
+  if (!condition) {
+    console.error(`FAIL: ${msg}`);
+    process.exit(1);
+  }
+  console.log(`SUCCESS: ${msg}`);
+}
+
+async function runTests() {
+  console.log('==================================================');
+  console.log('SMART VYAPAR - PHASE 6.5 POSTING INTEGRATION TESTS');
+  console.log('==================================================\n');
+
+  const keyProvider = new WindowsDpapiKeyProvider();
+  const dbPath = getDatabasePath();
+  const plainDbPath = getPlainDatabasePath();
+  const testDataDir = path.dirname(plainDbPath);
+  if (!fs.existsSync(testDataDir)) fs.mkdirSync(testDataDir, { recursive: true });
+
+  await closeDatabaseConnection();
+  if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+  if (fs.existsSync(plainDbPath)) fs.unlinkSync(plainDbPath);
+  await keyProvider.clearKey();
+
+  assert(await initializeDatabase(), 'Database initializes successfully');
+  const db = getDatabaseConnection();
+
+  const shopRepo = new ShopRepository();
+  const customerRepo = new CustomerRepository();
+  const customerService = new CustomerService();
+  const productRepo = new ProductRepository();
+  const unitRepo = new UnitOfMeasureRepository();
+  const taxRepo = new TaxRateRepository();
+  const barcodeRepo = new ProductBarcodeRepository();
+  const inventoryTxRepo = new InventoryTransactionRepository();
+  const salesService = new SalesService();
+
+  // 1. Create Shop with merchantUpiId
+  const shop = shopRepo.createShop({
+    name: 'POS Posting Test Shop',
+    phone: '9888877777',
+    address: 'Viman Nagar, Pune',
+    gstNumber: '27AAAAA1111A1Z1',
+    merchantUpiId: 'shop@ybl'
+  });
+  assert(!!shop && shop.merchantUpiId === 'shop@ybl', 'Shop profile created with UPI merchant ID');
+
+  // Seed default walk-in customer
+  customerService.ensureWalkInCustomer(shop.id);
+  const walkInCust = customerRepo.findWalkIn(shop.id);
+  assert(!!walkInCust, 'Walk-in customer initialized');
+
+  // Seed registered customer
+  const customer = customerService.createCustomer({
+    name: 'Prem Retailer',
+    customerType: 'RETAIL',
+    customerCode: 'CUST-001',
+    phone: '9812345678',
+    state: 'Maharashtra',
+  });
+  assert(!!customer, 'Registered customer created');
+
+  // Setup Standard default PriceBook
+  const defaultPb = db.prepare("SELECT * FROM PriceBook WHERE code='DEFAULT'").get() as any;
+  assert(!!defaultPb, 'Default PriceBook exists');
+
+  // Create active default StorePriceBook mappings
+  db.prepare(`
+    INSERT INTO StorePriceBook (id, shopId, priceBookId, priority, effectiveFrom, isActive, createdAt, updatedAt)
+    VALUES ('spb-test', ?, ?, 10, '2026-08-01', 1, datetime('now'), datetime('now'))
+  `).run(shop.id, defaultPb.id);
+
+  // Setup UOM, Tax, and Products
+  let unit = unitRepo.listAll(false).find(u => u.shortName === 'KG');
+  if (!unit) {
+    unit = unitRepo.create({
+      shopId: shop.id,
+      name: 'Kilogram',
+      shortName: 'KG',
+      decimalAllowed: true,
+      decimalPlaces: 3,
+      isActive: true
+    });
+  }
+  assert(!!unit, 'UOM KG loaded/created');
+
+  let tax = taxRepo.listAll(false).find(t => t.rate === 18);
+  if (!tax) {
+    tax = taxRepo.create({
+      shopId: shop.id,
+      name: 'GST 18%',
+      rate: 18,
+      taxType: 'GST',
+      isActive: true
+    });
+  }
+  assert(!!tax, 'Tax rate 18% loaded/created');
+
+  // Product 1: GOODS (track inventory)
+  const productService = new ProductService();
+  const product1 = await productService.createProduct({
+    product: {
+      productCode: 'PROD-A',
+      sku: 'SKU-A',
+      name: 'Basmati Rice Premium',
+      productType: 'GOODS',
+      hsnSacCode: '1006',
+      primaryUnitId: unit.id,
+      taxRateId: tax.id,
+      purchasePrice: 60,
+      trackInventory: true,
+      allowNegativeStock: false
+    },
+    barcodes: [{ barcode: 'BAR-A', isPrimary: true }],
+    defaultPrice: { purchasePrice: 60.00, sellingPrice: 100.00, mrp: 120.00 },
+    openingBalance: null
+  });
+  assert(!!product1, 'Product GOODS created');
+
+  // Product 2: SERVICE (no inventory)
+  const product2 = await productService.createProduct({
+    product: {
+      productCode: 'PROD-B',
+      sku: 'SKU-B',
+      name: 'Home Delivery Service',
+      productType: 'SERVICE',
+      hsnSacCode: '9968',
+      primaryUnitId: unit.id,
+      taxRateId: tax.id,
+      purchasePrice: 0,
+      trackInventory: false,
+      allowNegativeStock: false
+    },
+    barcodes: [{ barcode: 'BAR-B', isPrimary: true }],
+    defaultPrice: { purchasePrice: 0.00, sellingPrice: 50.00, mrp: 50.00 },
+    openingBalance: null
+  });
+  assert(!!product2, 'Product SERVICES created');
+
+  // Setup initial stock for Product 1: 10 units
+  inventoryTxRepo.create({
+    shopId: shop.id,
+    productId: product1.id,
+    transactionType: 'OPENING',
+    quantity: 10.00,
+    unitCost: 60.00,
+    occurredAt: new Date().toISOString()
+  });
+
+  // Check initial stock count
+  const stockRow = db.prepare('SELECT SUM(quantity) as q FROM InventoryTransaction WHERE productId = ?').get(product1.id) as { q: number };
+  assert(stockRow.q === 10.00, 'Initial stock is 10');
+
+  // Test 1: Empty cart post sale fails
+  const draft1 = salesService.createDraftForPOS(shop.id, walkInCust.id);
+  console.log("DEBUG DRAFT1:", draft1);
+  assert(!!draft1, 'Empty POS Draft created successfully');
+
+  try {
+    salesService.postSale(draft1.id, [{ paymentMode: 'CASH', amount: 0 }], draft1.version);
+    assert(false, 'Posting empty draft should fail');
+  } catch (err: any) {
+    console.log("DEBUG EMPTY CART ERROR IS:", err.message);
+    assert(err.message === 'EMPTY_CART', 'Fails with EMPTY_CART');
+  }
+
+  // Add line items to draft 1:
+  // PROD-A: qty = 2, unitPrice = 100, gst = 18%.
+  // Taxable = 200. Tax = 36. Grand total = 236.
+  const updatedDraft1 = salesService.addDraftLine(draft1.id, {
+    productId: product1.id,
+    quantity: 2,
+    provisionalUnitPrice: 100.00,
+    provisionalDiscountType: 'NONE',
+    provisionalDiscountValue: 0
+  });
+
+  const grandTotal1 = updatedDraft1.cart.grandTotal;
+  assert(grandTotal1 === 236, `Calculated grand total ${grandTotal1} is 236`);
+
+  // Test 2: Fails when payments allocated does not match grand total
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'CASH', amount: 200.00 }], updatedDraft1.version);
+    assert(false, 'Should fail when payment total !== grandTotal');
+  } catch (err: any) {
+    console.log("DEBUG INVALID ALLOCATION ERROR:", err.message);
+    assert(err.message === 'INVALID_PAYMENT_ALLOCATION', 'Fails with INVALID_PAYMENT_ALLOCATION');
+  }
+
+  // Test 3: Walk-In cannot use CREDIT payment mode
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'CREDIT', amount: 236.00 }], updatedDraft1.version);
+    assert(false, 'Walk-In customer cannot purchase on credit');
+  } catch (err: any) {
+    assert(err.message === 'CREDIT_CUSTOMER_REQUIRED', 'Fails with CREDIT_CUSTOMER_REQUIRED');
+  }
+
+  // Test 4: Stale version checkout mismatch fails
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'CASH', amount: 236.00 }], updatedDraft1.version + 1);
+    assert(false, 'Should fail when version mismatch');
+  } catch (err: any) {
+    assert(err.message === 'STALE_INVOICE_VERSION', 'Fails with STALE_INVOICE_VERSION');
+  }
+
+  // Test 5: UPI QR payment confirmation required
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'UPI', amount: 236.00 }], updatedDraft1.version);
+    assert(false, 'UPI allocation requires cashier confirmation');
+  } catch (err: any) {
+    assert(err.message === 'UPI_CONFIRMATION_REQUIRED', 'Fails with UPI_CONFIRMATION_REQUIRED');
+  }
+
+  // Test 6: Stale context / confirmation token mismatch fails
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'UPI', amount: 236.00 }], updatedDraft1.version, {
+      contextToken: 'stale-token',
+      upiConfirmed: true,
+      confirmedUpiAmount: 200 // mismatched confirmed amount
+    });
+    assert(false, 'Should fail when UPI confirmed amount mismatches allocation');
+  } catch (err: any) {
+    assert(err.message === 'UPI_CONFIRMATION_REQUIRED', 'Fails with UPI_CONFIRMATION_REQUIRED under mismatched amount');
+  }
+
+  // Test 7: Successful post sale under CASH allocation (Walk-In)
+  const detail1 = salesService.postSale(updatedDraft1.id, [{ paymentMode: 'CASH', amount: 236.00 }], updatedDraft1.version);
+  assert(detail1.invoice.status === 'POSTED', 'Invoice status updated to POSTED');
+  assert(detail1.invoice.paymentStatus === 'PAID', 'Payment status updated to PAID');
+  assert(detail1.invoice.invoiceNumber === 'INV-2026-000001', 'Official sequence drawn correctly: INV-2026-000001');
+
+  // Verify inventory stock for Product 1 is now 8.00 (decremented by 2)
+  const stockRowAfter = db.prepare('SELECT SUM(quantity) as q FROM InventoryTransaction WHERE productId = ?').get(product1.id) as { q: number };
+  assert(stockRowAfter.q === 8.00, 'Inventory decremented correctly from 10 to 8');
+
+  // Verify no customer ledger entries created for Walk-in customer
+  const ledgerCountWalkIn = db.prepare('SELECT COUNT(*) as c FROM CustomerLedgerEntry WHERE customerId = ?').get(walkInCust.id) as { c: number };
+  assert(ledgerCountWalkIn.c === 0, 'No ledger entry for Walk-In customer');
+
+  // Test 8: Insufficient stock validation
+  const draft2 = salesService.createDraftForPOS(shop.id, customer.id);
+  
+  // Attempt to buy 15 units of PROD-A (stock available is only 8)
+  const updatedDraft2 = salesService.addDraftLine(draft2.id, {
+    productId: product1.id,
+    quantity: 15,
+    provisionalUnitPrice: 100.00,
+    provisionalDiscountType: 'NONE',
+    provisionalDiscountValue: 0
+  });
+
+  try {
+    salesService.postSale(updatedDraft2.id, [{ paymentMode: 'CASH', amount: updatedDraft2.cart.grandTotal }], updatedDraft2.version);
+    assert(false, 'Should fail due to insufficient stock');
+  } catch (err: any) {
+    assert(err.message === 'INSUFFICIENT_STOCK', 'Fails with INSUFFICIENT_STOCK');
+  }
+
+  // Correct quantity to 3 (which is available)
+  const lineIdToUpdate = updatedDraft2.cart.lines[0].id;
+  const correctedDraft2 = salesService.updateDraftLine(draft2.id, lineIdToUpdate, {
+    quantity: 3,
+    provisionalUnitPrice: 100.00,
+    provisionalDiscountType: 'NONE',
+    provisionalDiscountValue: 0
+  });
+
+  const grandTotal2 = correctedDraft2.cart.grandTotal;
+  assert(grandTotal2 === 354, `Corrected Grand Total: ${grandTotal2} is 354`);
+
+  // Test 9: Posting to registered customer with CREDIT allocation
+  const detail2 = salesService.postSale(correctedDraft2.id, [{ paymentMode: 'CREDIT', amount: 354.00 }], correctedDraft2.version);
+  assert(detail2.invoice.status === 'POSTED', 'Second invoice posted');
+  assert(detail2.invoice.invoiceNumber === 'INV-2026-000002', 'Official sequence drawn correctly: INV-2026-000002');
+  assert(detail2.invoice.paymentStatus === 'UNPAID', 'Credit payment leads to paymentStatus UNPAID');
+
+  // Verify registered customer ledger entry: DEBIT of 354
+  const ledgers = db.prepare('SELECT * FROM CustomerLedgerEntry WHERE customerId = ? ORDER BY createdAt ASC').all(customer.id) as any[];
+  assert(ledgers.length === 1, 'One customer ledger entry created');
+  assert(ledgers[0].entryType === 'SALE', 'Entry type is SALE');
+  assert(ledgers[0].debitAmount === 354, 'Debited grand total 354');
+  assert(ledgers[0].creditAmount === 0, 'No credit amount');
+  assert(ledgers[0].referenceNumber === 'INV-2026-000002', 'References INV-2026-000002');
+
+  // Test 10: Mixed payment allocation and partial paid ledger checks
+  const draft3 = salesService.createDraftForPOS(shop.id, customer.id);
+  
+  // Add line delivery service PROD-B (SERVICES): quantity = 1, unitPrice = 50.00, gst = 18%. Grand total = 59.
+  const updatedDraft3 = salesService.addDraftLine(draft3.id, {
+    productId: product2.id,
+    quantity: 1,
+    provisionalUnitPrice: 50.00,
+    provisionalDiscountType: 'NONE',
+    provisionalDiscountValue: 0
+  });
+
+  const grandTotal3 = updatedDraft3.cart.grandTotal;
+  assert(grandTotal3 === 59, `Service Line Grand Total: ${grandTotal3} is 59`);
+
+  // Mixed Payment: Cash = 10, UPI = 20, Credit = 29.
+  const token = 'token-3';
+  const detail3 = salesService.postSale(updatedDraft3.id, [
+    { paymentMode: 'CASH', amount: 10.00 },
+    { paymentMode: 'UPI', amount: 20.00 },
+    { paymentMode: 'CREDIT', amount: 29.00 }
+  ], updatedDraft3.version, {
+    contextToken: token,
+    upiConfirmed: true,
+    confirmedUpiAmount: 20.00
+  });
+
+  assert(detail3.invoice.status === 'POSTED', 'Third invoice posted');
+  assert(detail3.invoice.invoiceNumber === 'INV-2026-000003', 'Official sequence drawn correctly: INV-2026-000003');
+  assert(detail3.invoice.paymentStatus === 'PARTIALLY_PAID', 'Mixed partial payment leads to paymentStatus PARTIALLY_PAID');
+  assert(detail3.invoice.paidAmount === 30.00, 'Paid amount is 30.00 (Cash 10 + UPI 20)');
+  assert(detail3.invoice.outstandingAmount === 29.00, 'Outstanding credit amount is 29.00');
+
+  // Verify ledger postings:
+  // 1. DEBIT: SALE for 59.
+  // 2. CREDIT: RECEIPT for 30.
+  const allLedgers = db.prepare("SELECT * FROM CustomerLedgerEntry WHERE referenceNumber = 'INV-2026-000003' ORDER BY entryType ASC").all() as any[];
+  assert(allLedgers.length === 2, 'Two ledger entries for mixed payment');
+  
+  const receiptEntry = allLedgers.find(l => l.entryType === 'RECEIPT');
+  const saleEntry = allLedgers.find(l => l.entryType === 'SALE');
+
+  assert(!!receiptEntry && receiptEntry.creditAmount === 30, 'RECEIPT credited 30 (non-credit paid)');
+  assert(!!saleEntry && saleEntry.debitAmount === 59, 'SALE debited 59 (grand total)');
+
+  // Verify service line did NOT log any inventory transactions
+  const svcTxCount = db.prepare('SELECT COUNT(*) as c FROM InventoryTransaction WHERE productId = ?').get(product2.id) as { c: number };
+  assert(svcTxCount.c === 0, 'No inventory logged for SERVICE lines');
+
+  console.log('\n==================================================');
+  console.log('ALL PHASE 6.5 POSTING INTEGRATION TESTS PASSED!');
+  console.log('==================================================');
+  
+  await closeDatabaseConnection();
+  process.exit(0);
+}
+
+runTests().catch(err => {
+  console.error('Unhandled failure during integration tests:', err);
+  process.exit(1);
+});

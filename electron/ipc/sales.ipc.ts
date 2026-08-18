@@ -334,4 +334,25 @@ export function registerSalesIpc() {
       return { success: false, error: err.message || 'Failed to delete POS draft.' };
     }
   });
+
+  ipcMain.handle(IPC_CHANNELS.POS_POST_SALE, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const id = String(payload?.id || '');
+      const payments = payload?.payments;
+      const version = Number(payload?.version);
+      const paymentContext = payload?.paymentContext;
+
+      if (!id) return { success: false, error: 'Invoice ID is required.' };
+      if (!Array.isArray(payments)) return { success: false, error: 'Payments array is required.' };
+      if (isNaN(version)) return { success: false, error: 'Version is required.' };
+
+      logInfo(`IPC Invoked: pos:postSale for ID: ${id}`);
+      const posted = salesService.postSale(id, payments, version, paymentContext);
+      return { success: true, data: posted };
+    } catch (err: any) {
+      logError('IPC pos:postSale failed', err);
+      return { success: false, error: err.message || 'Failed to post POS sale.' };
+    }
+  });
 }

@@ -149,6 +149,7 @@ export interface POSDraftViewModel {
   heldAt: string | null;
   createdAt: string;
   updatedAt: string;
+  version: number;
 }
 
 export interface POSDraftSaveInput {

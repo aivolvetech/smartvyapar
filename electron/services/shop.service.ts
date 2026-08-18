@@ -14,6 +14,7 @@ export class ShopService {
       phone: shop.phone || null,
       address: shop.address || null,
       gstNumber: shop.gstNumber || null,
+      merchantUpiId: shop.merchantUpiId || null,
       createdAt: shop.createdAt,
       updatedAt: shop.updatedAt,
     };
@@ -32,6 +33,7 @@ export class ShopService {
         phone: input.phone || null,
         address: input.address || null,
         gstNumber: input.gstNumber || null,
+        merchantUpiId: input.merchantUpiId || null,
       });
     } else {
       shop = this.repository.createShop({
@@ -39,6 +41,7 @@ export class ShopService {
         phone: input.phone,
         address: input.address,
         gstNumber: input.gstNumber,
+        merchantUpiId: input.merchantUpiId,
       });
     }
 
@@ -53,6 +56,7 @@ export class ShopService {
       phone: shop.phone || null,
       address: shop.address || null,
       gstNumber: shop.gstNumber || null,
+      merchantUpiId: shop.merchantUpiId || null,
       createdAt: shop.createdAt,
       updatedAt: shop.updatedAt,
     };

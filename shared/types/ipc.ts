@@ -30,6 +30,7 @@ export interface ShopData {
   phone: string | null;
   address: string | null;
   gstNumber: string | null;
+  merchantUpiId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -39,6 +40,7 @@ export interface ShopCreateInput {
   phone?: string;
   address?: string;
   gstNumber?: string;
+  merchantUpiId?: string;
 }
 
 // --------------------------------------------------------------------------
@@ -487,6 +489,7 @@ export const IPC_CHANNELS = {
   POS_HOLD_BILL: 'pos:holdBill',
   POS_RESUME_BILL: 'pos:resumeBill',
   POS_DELETE_DRAFT: 'pos:deleteDraft',
+  POS_POST_SALE: 'pos:postSale',
 } as const;
 
 export type IpcChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];

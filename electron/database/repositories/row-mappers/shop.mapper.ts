@@ -10,6 +10,7 @@ export function mapRowToShop(row: any): Shop {
     phone: row.phone || null,
     address: row.address || null,
     gstNumber: row.gstNumber || null,
+    merchantUpiId: row.merchantUpiId || null,
     createdAt: typeof row.createdAt === 'number'
       ? new Date(row.createdAt).toISOString()
       : new Date(row.createdAt).toISOString(),

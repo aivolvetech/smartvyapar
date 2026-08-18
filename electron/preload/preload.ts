@@ -146,4 +146,5 @@ contextBridge.exposeInMainWorld('smartVyapar', {
   holdPOSDraft: (id: string, shopId?: string) => ipcRenderer.invoke(IPC_CHANNELS.POS_HOLD_BILL, { id, shopId }),
   resumePOSDraft: (id: string, shopId?: string) => ipcRenderer.invoke(IPC_CHANNELS.POS_RESUME_BILL, { id, shopId }),
   deletePOSDraft: (id: string, shopId?: string) => ipcRenderer.invoke(IPC_CHANNELS.POS_DELETE_DRAFT, { id, shopId }),
+  postPOSSale: (id: string, payments: any[], version: number, paymentContext?: any) => ipcRenderer.invoke(IPC_CHANNELS.POS_POST_SALE, { id, payments, version, paymentContext }),
 });

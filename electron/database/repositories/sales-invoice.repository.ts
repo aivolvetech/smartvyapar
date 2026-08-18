@@ -80,6 +80,7 @@ export class SalesInvoiceRepository {
         UPDATE SalesInvoice
         SET
           customerId = ?,
+          invoiceNumber = ?,
           invoiceDate = ?,
           dueDate = ?,
           status = ?,
@@ -110,6 +111,7 @@ export class SalesInvoiceRepository {
         WHERE id = ? AND version = ?
       `).run(
         invoice.customerId,
+        invoice.invoiceNumber,
         invoice.invoiceDate,
         invoice.dueDate,
         invoice.status,

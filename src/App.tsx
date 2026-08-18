@@ -20,7 +20,7 @@ declare global {
     smartVyapar: {
       getAppInfo(): Promise<IPCResponse<AppInfo>>;
       getShop(): Promise<IPCResponse<ShopData | null>>;
-      createShop(input: { name: string; phone?: string; address?: string; gstNumber?: string }): Promise<IPCResponse<ShopData>>;
+      createShop(input: ShopCreateInput): Promise<IPCResponse<ShopData>>;
       getDatabaseStatus(): Promise<IPCResponse<{ state: 'CONNECTED' | 'MIGRATING' | 'ERROR'; encrypted: boolean; offline: boolean }>>;
 
       listUnits(activeOnly?: boolean): Promise<IPCResponse<UnitOfMeasureData[]>>;
@@ -83,6 +83,7 @@ import SupplierModule from './components/suppliers/SupplierModule';
 import PurchaseModule from './components/purchases/PurchaseModule';
 import BulkImportModule from './components/import/BulkImportModule';
 import CustomerModule from './components/customers/CustomerModule';
+import BillingModule from './components/pos/BillingModule';
 
 if (typeof window !== 'undefined' && !window.smartVyapar) {
   // Setup simple in-memory storage for the web-mode/browser mocks
@@ -361,6 +362,78 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
     getProductByBarcode: async (barcode: string) => {
       const p = mockStorage.products.find(item => item.barcodes.some(b => b.barcode === barcode));
       return { success: true, data: p || null };
+    },
+    searchPOSProducts: async (input: any) => {
+      const q = (input.query || '').trim().toLowerCase();
+      let filtered = mockStorage.products.filter(p => p.isActive);
+      if (q) {
+        filtered = filtered.filter(p => p.name.toLowerCase().includes(q) || p.productCode.toLowerCase().includes(q) || p.barcodes.some(b => b.barcode.toLowerCase().includes(q)));
+      }
+      const items = filtered.map(p => ({
+        productId: p.id,
+        productCode: p.productCode,
+        productName: p.name,
+        productType: p.productType,
+        barcode: p.barcodes.find(b => b.isPrimary)?.barcode || p.barcodes[0]?.barcode || null,
+        unitId: p.primaryUnitId,
+        unitName: p.unitShortName,
+        allowsDecimalQuantity: p.primaryUnitId ? (mockStorage.units.find(u => u.id === p.primaryUnitId)?.decimalAllowed ?? false) : false,
+        decimalPlaces: p.primaryUnitId ? (mockStorage.units.find(u => u.id === p.primaryUnitId)?.decimalPlaces ?? 0) : 0,
+        taxRateId: p.taxRateId,
+        taxCategory: p.taxRateId ? 'GST' : 'EXEMPT',
+        taxRate: p.taxRateId ? 18 : 0,
+        hsnSacCode: p.hsnSacCode,
+        sellingPrice: p.sellingPrice,
+        mrp: p.mrp,
+        minimumSellingPrice: null,
+        minimumSellingPriceConfigured: false,
+        priceSource: 'STANDARD_PRICE_BOOK' as any,
+        currentStock: 100,
+        stockAsOf: new Date().toISOString(),
+        trackInventory: p.trackInventory,
+        allowNegativeStock: p.allowNegativeStock,
+        warnings: []
+      }));
+      return {
+        success: true,
+        data: {
+          items,
+          totalItems: items.length,
+          page: 1,
+          pageSize: 50,
+          totalPages: 1
+        }
+      };
+    },
+    resolvePOSProductByBarcode: async (input: any) => {
+      const p = mockStorage.products.find(item => item.isActive && item.barcodes.some(b => b.barcode === input.barcode));
+      if (!p) return { success: false, error: 'Product not found' };
+      const resolved = {
+        productId: p.id,
+        productCode: p.productCode,
+        productName: p.name,
+        productType: p.productType,
+        barcode: input.barcode,
+        unitId: p.primaryUnitId,
+        unitName: p.unitShortName,
+        allowsDecimalQuantity: p.primaryUnitId ? (mockStorage.units.find(u => u.id === p.primaryUnitId)?.decimalAllowed ?? false) : false,
+        decimalPlaces: p.primaryUnitId ? (mockStorage.units.find(u => u.id === p.primaryUnitId)?.decimalPlaces ?? 0) : 0,
+        taxRateId: p.taxRateId,
+        taxCategory: p.taxRateId ? 'GST' : 'EXEMPT',
+        taxRate: p.taxRateId ? 18 : 0,
+        hsnSacCode: p.hsnSacCode,
+        sellingPrice: p.sellingPrice,
+        mrp: p.mrp,
+        minimumSellingPrice: null,
+        minimumSellingPriceConfigured: false,
+        priceSource: 'STANDARD_PRICE_BOOK' as any,
+        currentStock: 100,
+        stockAsOf: new Date().toISOString(),
+        trackInventory: p.trackInventory,
+        allowNegativeStock: p.allowNegativeStock,
+        warnings: []
+      };
+      return { success: true, data: resolved };
     },
     createProduct: async (req: CreateProductRequest) => {
       const normalizedCode = req.product.productCode.trim().toLowerCase();
@@ -697,6 +770,15 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
       mockStorage.sales = mockStorage.sales.filter(s => s.id !== id);
       return { success: true };
     },
+    postPOSSale: async (id: string, _payments: any[], _version: number, _paymentContext?: any) => {
+      const s = mockStorage.sales.find(item => item.id === id);
+      if (s) {
+        s.status = 'POSTED';
+        s.invoiceNumber = 'INV-2026-' + String(Math.floor(Math.random() * 900000) + 100000);
+        return { success: true, data: { invoice: s, lines: [] } };
+      }
+      return { success: false, error: 'Draft not found.' };
+    },
   } as any;
 }
 type StartupState =
@@ -736,6 +818,7 @@ export default function App() {
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [gstNumber, setGstNumber] = useState('');
+  const [merchantUpiId, setMerchantUpiId] = useState('');
   
   // UI States
   const [submitting, setSubmitting] = useState(false);
@@ -835,6 +918,7 @@ export default function App() {
           setPhone(shopRes.data.phone || '');
           setAddress(shopRes.data.address || '');
           setGstNumber(shopRes.data.gstNumber || '');
+          setMerchantUpiId(shopRes.data.merchantUpiId || '');
           setStartupState('READY');
         } else {
           setStartupState('SETUP_REQUIRED');
@@ -884,11 +968,12 @@ export default function App() {
 
     try {
       setSubmitting(true);
-      const res = await window.smartVyapar.createShop({
+        const res = await window.smartVyapar.createShop({
         name: name.trim(),
         phone: phone.trim() || undefined,
         address: address.trim() || undefined,
         gstNumber: gstNumber.trim().toUpperCase() || undefined,
+        merchantUpiId: merchantUpiId.trim() || undefined,
       });
 
       if (res.success && res.data) {
@@ -897,6 +982,7 @@ export default function App() {
         setPhone(res.data.phone || '');
         setAddress(res.data.address || '');
         setGstNumber(res.data.gstNumber || '');
+        setMerchantUpiId(res.data.merchantUpiId || '');
         setToast({ type: 'success', message: 'Shop profile saved securely.' });
         
         if (startupState === 'SETUP_REQUIRED') {
@@ -1043,6 +1129,19 @@ export default function App() {
               {validationErrors.gstNumber && <span className="form-error-msg" role="alert">{validationErrors.gstNumber}</span>}
             </div>
 
+            <div className="form-group">
+              <label htmlFor="setup-upi">Merchant UPI ID (Optional)</label>
+              <input
+                id="setup-upi"
+                type="text"
+                className="form-input"
+                value={merchantUpiId}
+                onChange={(e) => setMerchantUpiId(e.target.value)}
+                placeholder="e.g. merchant@upi"
+                disabled={submitting}
+              />
+            </div>
+
             <button type="submit" className="app-btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={submitting}>
               {submitting ? 'Persisting Profile...' : 'Initialize Local Database'}
             </button>
@@ -1076,10 +1175,10 @@ export default function App() {
           </button>
           <button
             type="button"
-            className={`menu-item coming-soon ${activeTab === 'billing' ? 'active' : ''}`}
+            className={`menu-item ${activeTab === 'billing' ? 'active' : ''}`}
             onClick={() => setActiveTab('billing')}
           >
-            🛒 Billing / POS <span className="menu-item-badge">Soon</span>
+            🛒 Billing / POS
           </button>
           <button
             type="button"
@@ -1313,6 +1412,18 @@ export default function App() {
                     {validationErrors.gstNumber && <span className="form-error-msg" role="alert">{validationErrors.gstNumber}</span>}
                   </div>
 
+                  <div className="form-group">
+                    <label htmlFor="settings-upi">Merchant UPI ID (Optional)</label>
+                    <input
+                      id="settings-upi"
+                      type="text"
+                      className="form-input"
+                      value={merchantUpiId}
+                      onChange={(e) => setMerchantUpiId(e.target.value)}
+                      disabled={submitting}
+                    />
+                  </div>
+
                   <button type="submit" className="app-btn btn-primary" disabled={submitting}>
                     {submitting ? 'Saving Changes...' : 'Save Profile Changes'}
                   </button>
@@ -1343,6 +1454,10 @@ export default function App() {
                     <div className="info-row">
                       <span className="info-key">GSTIN</span>
                       <span className="info-val">{shop.gstNumber || 'Not Set'}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-key">Merchant UPI ID</span>
+                      <span className="info-val">{shop.merchantUpiId || 'Not Set'}</span>
                     </div>
                     <div className="info-row">
                       <span className="info-key">Created At</span>
@@ -1387,12 +1502,15 @@ export default function App() {
             <CustomerModule />
           )}
 
+          {activeTab === 'billing' && shop && (
+            <BillingModule shopId={shop.id} />
+          )}
 
           {activeTab === 'import' && (
             <BulkImportModule preselectedType={preselectedImportType} onClearPreselect={() => setPreselectedImportType(null)} />
           )}
 
-          {activeTab !== 'dashboard' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'import' && activeTab !== 'settings' && (
+          {activeTab !== 'dashboard' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'customers' && activeTab !== 'import' && activeTab !== 'settings' && activeTab !== 'billing' && (
             <div className="coming-soon-container">
               <div className="coming-soon-logo">📦</div>
               <h3 style={{ fontSize: '1.4rem', color: 'white', margin: 0 }}>

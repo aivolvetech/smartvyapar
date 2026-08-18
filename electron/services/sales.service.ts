@@ -7,6 +7,10 @@ import { ProductRepository } from '../database/repositories/product.repository';
 import { ProductBarcodeRepository } from '../database/repositories/product-barcode.repository';
 import { UnitOfMeasureRepository } from '../database/repositories/unit-of-measure.repository';
 import { TaxRateRepository } from '../database/repositories/tax-rate.repository';
+import { DocumentSequenceRepository } from '../database/repositories/document-sequence.repository';
+import { InventoryTransactionRepository } from '../database/repositories/inventory-transaction.repository';
+import { CustomerLedgerRepository } from '../database/repositories/customer-ledger.repository';
+import { ShopRepository } from '../database/repositories/shop.repository';
 import { SalesPriceResolutionService } from './sales-price-resolution.service';
 import { SalesBarcodeResolutionService } from './sales-barcode-resolution.service';
 import {
@@ -44,6 +48,10 @@ export class SalesService {
   private taxRateRepo = new TaxRateRepository();
   private priceResolutionService = new SalesPriceResolutionService();
   private barcodeResolutionService = new SalesBarcodeResolutionService();
+  private sequenceRepo = new DocumentSequenceRepository();
+  private inventoryTxRepo = new InventoryTransactionRepository();
+  private customerLedgerRepo = new CustomerLedgerRepository();
+  private shopRepo = new ShopRepository();
 
   /**
    * Helper to verify a Customer exists, belongs to the Shop, and is active.
@@ -273,7 +281,8 @@ export class SalesService {
       cart,
       heldAt: invoice.heldAt,
       createdAt: invoice.createdAt,
-      updatedAt: invoice.updatedAt
+      updatedAt: invoice.updatedAt,
+      version: invoice.version
     };
   }
 
@@ -1187,5 +1196,373 @@ export class SalesService {
     }
 
     this.salesInvoiceRepo.delete(id);
+  }
+
+  /**
+   * Authoritatively posts a sales invoice in a single transactional unit.
+   */
+  public postSale(
+    invoiceId: string,
+    payments: { paymentMode: string; amount: number; referenceNumber?: string | null }[],
+    version: number,
+    paymentContext?: { contextToken: string; upiConfirmed?: boolean; confirmedUpiAmount?: number }
+  ): SalesInvoiceDetail {
+    const db = getDatabaseConnection();
+
+    const runTx = db.transaction(() => {
+      const now = new Date().toISOString();
+      // 1. Read draft invoice
+      const invoice = this.salesInvoiceRepo.findById(invoiceId);
+      if (!invoice) {
+        throw new Error('SALE_NOT_FOUND');
+      }
+      if (invoice.status === 'POSTED') {
+        throw new Error('SALE_ALREADY_POSTED');
+      }
+      if (invoice.status !== 'DRAFT') {
+        throw new Error('SALE_NOT_DRAFT');
+      }
+      if (invoice.version !== version) {
+        throw new Error('STALE_INVOICE_VERSION');
+      }
+
+      // 2. Validate customer & shop settings
+      const customer = this.customerRepo.findById(invoice.customerId);
+      if (!customer) {
+        throw new Error('CUSTOMER_NOT_FOUND');
+      }
+      const shop = this.shopRepo.getShop();
+      if (!shop || shop.id !== invoice.shopId) {
+        throw new Error('SHOP_NOT_FOUND');
+      }
+
+      // 3. Re-resolve prices and recalculate totals
+      const lines = this.salesLineRepo.findByInvoiceId(invoiceId);
+      if (lines.length === 0) {
+        throw new Error('EMPTY_CART');
+      }
+
+      // Inter-state check (for tax)
+      let interState = false;
+      if (customer.gstNumber && shop.gstNumber) {
+        const custStateCode = customer.gstNumber.trim().substring(0, 2);
+        const shopStateCode = shop.gstNumber.trim().substring(0, 2);
+        if (custStateCode && shopStateCode && custStateCode !== shopStateCode) {
+          interState = true;
+        }
+      } else if (customer.state && shop.address) {
+        const custState = customer.state.trim().toLowerCase();
+        const shopAddress = shop.address.trim().toLowerCase();
+        if (custState && !shopAddress.includes(custState)) {
+          interState = true;
+        }
+      }
+
+      let subtotalPaise = 0;
+      let lineDiscountTotalPaise = 0;
+
+      const resolvedLines = lines.map(line => {
+        const resolved = this.priceResolutionService.resolvePrice({
+          shopId: invoice.shopId,
+          productId: line.productId,
+          customerId: invoice.customerId,
+          draftDate: invoice.invoiceDate
+        });
+        if (!resolved || resolved.sellingPrice === undefined) {
+          throw new Error('PRODUCT_PRICE_NOT_FOUND');
+        }
+
+        if (resolved.sellingPrice !== line.unitPrice) {
+          throw new Error('PRICE_CHANGED');
+        }
+
+        const unitPricePaise = Math.round(line.unitPrice * 100);
+        let discountAmountPaise = 0;
+        if (line.discountType === 'PERCENT') {
+          discountAmountPaise = Math.round((unitPricePaise * line.discountValue) / 100);
+        } else if (line.discountType === 'AMOUNT') {
+          discountAmountPaise = Math.round(line.discountValue * 100);
+        }
+
+        const qty = line.quantity;
+        const baseAmountPaise = Math.round(qty * unitPricePaise);
+        const lineDiscountPaise = Math.round(qty * discountAmountPaise);
+        const taxableAmountPaise = baseAmountPaise - lineDiscountPaise;
+
+        subtotalPaise += taxableAmountPaise;
+        lineDiscountTotalPaise += lineDiscountPaise;
+
+        return {
+          ...line,
+          discountAmount: discountAmountPaise / 100,
+          taxableAmount: taxableAmountPaise / 100,
+          lineTotal: taxableAmountPaise / 100
+        };
+      });
+
+      let invoiceDiscountTotalPaise = 0;
+      if (invoice.invoiceDiscountType === 'PERCENT') {
+        invoiceDiscountTotalPaise = Math.round((subtotalPaise * invoice.invoiceDiscountValue) / 100);
+      } else if (invoice.invoiceDiscountType === 'AMOUNT') {
+        invoiceDiscountTotalPaise = Math.round(invoice.invoiceDiscountValue * 100);
+      }
+
+      let overallTaxableAmountPaise = Math.max(0, subtotalPaise - invoiceDiscountTotalPaise);
+
+      // Allocate invoice discount and calculate line taxes
+      let allocatedTotalPaise = 0;
+      let cgstTotalPaise = 0;
+      let sgstTotalPaise = 0;
+      let igstTotalPaise = 0;
+      let cessTotalPaise = 0;
+
+      const processedLines = resolvedLines.map((line, idx) => {
+        let allocationPaise = 0;
+        const lineTaxablePaise = Math.round(line.taxableAmount * 100);
+
+        if (subtotalPaise > 0) {
+          if (idx === resolvedLines.length - 1) {
+            allocationPaise = invoiceDiscountTotalPaise - allocatedTotalPaise;
+          } else {
+            allocationPaise = Math.round((invoiceDiscountTotalPaise * lineTaxablePaise) / subtotalPaise);
+            allocatedTotalPaise += allocationPaise;
+          }
+        }
+
+        const allocatedTaxableAmountPaise = Math.max(0, lineTaxablePaise - allocationPaise);
+
+        // Taxes
+        const taxRate = line.taxRateSnapshot;
+        let cgstRate = 0;
+        let sgstRate = 0;
+        let igstRate = 0;
+        let cessRate = line.cessRate || 0;
+
+        if (line.taxCategorySnapshot === 'GST') {
+          if (interState) {
+            igstRate = taxRate;
+          } else {
+            cgstRate = taxRate / 2;
+            sgstRate = taxRate / 2;
+          }
+        }
+
+        const cgstAmountPaise = Math.round((allocatedTaxableAmountPaise * cgstRate) / 100);
+        const sgstAmountPaise = Math.round((allocatedTaxableAmountPaise * sgstRate) / 100);
+        const igstAmountPaise = Math.round((allocatedTaxableAmountPaise * igstRate) / 100);
+        const cessAmountPaise = Math.round((allocatedTaxableAmountPaise * cessRate) / 100);
+
+        cgstTotalPaise += cgstAmountPaise;
+        sgstTotalPaise += sgstAmountPaise;
+        igstTotalPaise += igstAmountPaise;
+        cessTotalPaise += cessAmountPaise;
+
+        const lineTotalPaise = allocatedTaxableAmountPaise + cgstAmountPaise + sgstAmountPaise + igstAmountPaise + cessAmountPaise;
+
+        return {
+          ...line,
+          invoiceDiscountAllocation: allocationPaise / 100,
+          taxableAmount: allocatedTaxableAmountPaise / 100,
+          cgstRate,
+          cgstAmount: cgstAmountPaise / 100,
+          sgstRate,
+          sgstAmount: sgstAmountPaise / 100,
+          igstRate,
+          igstAmount: igstAmountPaise / 100,
+          cessRate,
+          cessAmount: cessAmountPaise / 100,
+          lineTotal: lineTotalPaise / 100
+        };
+      });
+
+      const grandTotalPaise = overallTaxableAmountPaise + cgstTotalPaise + sgstTotalPaise + igstTotalPaise + cessTotalPaise;
+      const grandTotalRounded = Math.round(grandTotalPaise / 100);
+      const roundOffPaise = (grandTotalRounded * 100) - grandTotalPaise;
+
+      // 4. Validate Stock
+      for (const line of processedLines) {
+        if (line.productTypeSnapshot === 'GOODS') {
+          const product = this.productRepo.findById(line.productId);
+          if (product && product.trackInventory) {
+            // Calculate current stock
+            const stockRow = db.prepare(`
+              SELECT COALESCE(SUM(quantity), 0) AS q
+              FROM InventoryTransaction
+              WHERE shopId = ? AND productId = ?
+            `).get(invoice.shopId, line.productId) as { q: number } | undefined;
+            const currentStock = stockRow ? stockRow.q : 0;
+
+            if (currentStock - line.quantity < 0 && !product.allowNegativeStock) {
+              throw new Error('INSUFFICIENT_STOCK');
+            }
+          }
+        }
+      }
+
+      // 5. Validate Payments
+      let totalAllocatedPaise = 0;
+      let cashAllocatedPaise = 0;
+      let cardAllocatedPaise = 0;
+      let upiAllocatedPaise = 0;
+      let creditAllocatedPaise = 0;
+
+      for (const pay of payments) {
+        if (pay.amount < 0) {
+          throw new Error('INVALID_PAYMENT_ALLOCATION');
+        }
+        const amtPaise = Math.round(pay.amount * 100);
+        totalAllocatedPaise += amtPaise;
+
+        if (pay.paymentMode === 'CASH') cashAllocatedPaise += amtPaise;
+        else if (pay.paymentMode === 'CARD') cardAllocatedPaise += amtPaise;
+        else if (pay.paymentMode === 'UPI') upiAllocatedPaise += amtPaise;
+        else if (pay.paymentMode === 'CREDIT') creditAllocatedPaise += amtPaise;
+      }
+
+      if (totalAllocatedPaise !== grandTotalRounded * 100) {
+        throw new Error('INVALID_PAYMENT_ALLOCATION');
+      }
+
+      // Credit Customer Rules
+      if (creditAllocatedPaise > 0) {
+        if (customer.customerType === 'WALK_IN' || customer.isWalkIn || customer.customerCode === 'WALKIN') {
+          throw new Error('CREDIT_CUSTOMER_REQUIRED');
+        }
+      }
+
+      // UPI Settings & Context checks
+      if (upiAllocatedPaise > 0) {
+        if (!shop.merchantUpiId || !shop.merchantUpiId.trim()) {
+          throw new Error('UPI_NOT_CONFIGURED');
+        }
+        if (!paymentContext || !paymentContext.upiConfirmed || paymentContext.confirmedUpiAmount !== (upiAllocatedPaise / 100)) {
+          throw new Error('UPI_CONFIRMATION_REQUIRED');
+        }
+      }
+
+      // 6. Draw Official sequence
+      const year = new Date(invoice.invoiceDate).getFullYear();
+      const invoiceNumber = this.sequenceRepo.next('SALES_INVOICE', String(year), `INV-${year}-`, 6);
+
+      // 7. Update SalesInvoice
+      const nonCreditPaidPaise = cashAllocatedPaise + cardAllocatedPaise + upiAllocatedPaise;
+      const outstandingPaise = (grandTotalRounded * 100) - nonCreditPaidPaise;
+
+      let paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' = 'UNPAID';
+      if (outstandingPaise === 0) {
+        paymentStatus = 'PAID';
+      } else if (outstandingPaise > 0 && nonCreditPaidPaise > 0) {
+        paymentStatus = 'PARTIALLY_PAID';
+      }
+
+      invoice.invoiceNumber = invoiceNumber;
+      invoice.status = 'POSTED';
+      invoice.paymentStatus = paymentStatus;
+      invoice.subtotal = subtotalPaise / 100;
+      invoice.lineDiscountTotal = lineDiscountTotalPaise / 100;
+      invoice.invoiceDiscountTotal = invoiceDiscountTotalPaise / 100;
+      invoice.taxableAmount = overallTaxableAmountPaise / 100;
+      invoice.cgstTotal = cgstTotalPaise / 100;
+      invoice.sgstTotal = sgstTotalPaise / 100;
+      invoice.igstTotal = igstTotalPaise / 100;
+      invoice.cessTotal = cessTotalPaise / 100;
+      invoice.roundOff = roundOffPaise / 100;
+      invoice.grandTotal = grandTotalRounded;
+      invoice.paidAmount = nonCreditPaidPaise / 100;
+      invoice.outstandingAmount = outstandingPaise / 100;
+      invoice.postedAt = now;
+      invoice.updatedAt = now;
+
+      this.salesInvoiceRepo.update(invoice);
+
+      // 8. Update lines and create inventory transactions
+      for (const line of processedLines) {
+        let invTxId: string | null = null;
+
+        if (line.productTypeSnapshot === 'GOODS') {
+          const product = this.productRepo.findById(line.productId);
+          if (product && product.trackInventory) {
+            const invTx = this.inventoryTxRepo.create({
+              shopId: invoice.shopId,
+              productId: line.productId,
+              transactionType: 'SALE_OUT',
+              quantity: -line.quantity,
+              unitCost: product.cachedPurchasePrice || 0,
+              referenceType: 'SALES_INVOICE',
+              referenceId: invoice.id,
+              referenceNumber: invoiceNumber,
+              occurredAt: invoice.invoiceDate
+            });
+            invTxId = invTx.id;
+          }
+        }
+
+        const lineCopy = {
+          ...line,
+          inventoryTransactionId: invTxId,
+          updatedAt: now
+        };
+        this.salesLineRepo.update(lineCopy);
+      }
+
+      // 9. Persist SalesPayments
+      for (const pay of payments) {
+        if (pay.amount > 0) {
+          db.prepare(`
+            INSERT INTO SalesPayment (
+              id, salesInvoiceId, paymentMode, amount, referenceNumber, paymentDate, status, notes, idempotencyKey, createdAt
+            ) VALUES (?, ?, ?, ?, ?, ?, 'CAPTURED', NULL, NULL, ?)
+          `).run(
+            crypto.randomUUID(),
+            invoice.id,
+            pay.paymentMode,
+            pay.amount,
+            pay.referenceNumber || null,
+            invoice.invoiceDate,
+            now
+          );
+        }
+      }
+
+      // 10. Ledger posting for registered customers
+      const isWalkIn = customer.customerType === 'WALK_IN' || customer.isWalkIn || customer.customerCode === 'WALKIN';
+      if (!isWalkIn) {
+        // Debit grandTotal
+        this.customerLedgerRepo.create({
+          customerId: invoice.customerId,
+          shopId: invoice.shopId,
+          entryType: 'SALE',
+          referenceType: 'SALES_INVOICE',
+          referenceId: invoice.id,
+          referenceNumber: invoiceNumber,
+          debitAmount: grandTotalRounded,
+          creditAmount: 0,
+          occurredAt: invoice.invoiceDate
+        });
+
+        // Credit non-credit paid
+        const nonCreditPaidVal = nonCreditPaidPaise / 100;
+        if (nonCreditPaidVal > 0) {
+          this.customerLedgerRepo.create({
+            customerId: invoice.customerId,
+            shopId: invoice.shopId,
+            entryType: 'RECEIPT',
+            referenceType: 'SALES_INVOICE',
+            referenceId: invoice.id,
+            referenceNumber: invoiceNumber,
+            debitAmount: 0,
+            creditAmount: nonCreditPaidVal,
+            occurredAt: invoice.invoiceDate
+          });
+        }
+      }
+
+      return {
+        invoice,
+        lines: this.salesLineRepo.findByInvoiceId(invoiceId)
+      };
+    });
+
+    return runTx();
   }
 }

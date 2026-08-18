@@ -54,11 +54,17 @@ export function registerShopIpc() {
         return { success: false, error: 'Shop GST number must be a text value.' };
       }
 
+      const merchantUpiId = payload.merchantUpiId;
+      if (merchantUpiId !== undefined && merchantUpiId !== null && typeof merchantUpiId !== 'string') {
+        return { success: false, error: 'Merchant UPI ID must be a text value.' };
+      }
+
       const input: ShopCreateInput = {
         name: name.trim(),
         phone: phone ? phone.trim() : undefined,
         address: address ? address.trim() : undefined,
         gstNumber: gstNumber ? gstNumber.trim() : undefined,
+        merchantUpiId: merchantUpiId ? merchantUpiId.trim() : undefined,
       };
 
       const result = await shopService.createOrUpdateShop(input);

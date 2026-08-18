@@ -17,6 +17,7 @@
     "@primno/dpapi": "2.0.1",
     "better-sqlite3": "11.2.0",
     "better-sqlite3-multiple-ciphers": "11.10.0",
+    "qrcode": "^1.5.4",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "xlsx": "^0.18.5"
@@ -31,6 +32,7 @@
     "electron-builder": "24.13.3",
     "esbuild": "0.21.3",
     "prisma": "5.14.0",
+    "ts-node": "^10.9.2",
     "typescript": "5.4.5",
     "vite": "5.2.11"
   },

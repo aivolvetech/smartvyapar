@@ -34,14 +34,15 @@ export class ShopRepository {
       const nowStr = new Date().toISOString();
 
       db.prepare(`
-        INSERT INTO Shop (id, name, phone, address, gstNumber, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Shop (id, name, phone, address, gstNumber, merchantUpiId, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         input.name,
         input.phone || null,
         input.address || null,
         input.gstNumber || null,
+        input.merchantUpiId || null,
         nowStr,
         nowStr
       );
@@ -66,16 +67,18 @@ export class ShopRepository {
       const phone = input.phone !== undefined ? input.phone : existing.phone;
       const address = input.address !== undefined ? input.address : existing.address;
       const gstNumber = input.gstNumber !== undefined ? input.gstNumber : existing.gstNumber;
+      const merchantUpiId = input.merchantUpiId !== undefined ? input.merchantUpiId : existing.merchantUpiId;
 
       db.prepare(`
         UPDATE Shop
-        SET name = ?, phone = ?, address = ?, gstNumber = ?, updatedAt = ?
+        SET name = ?, phone = ?, address = ?, gstNumber = ?, merchantUpiId = ?, updatedAt = ?
         WHERE id = ?
       `).run(
         name,
         phone || null,
         address || null,
         gstNumber || null,
+        merchantUpiId || null,
         nowStr,
         existing.id
       );
