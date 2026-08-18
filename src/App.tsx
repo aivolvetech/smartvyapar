@@ -92,6 +92,10 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
     brands: BrandData[];
     products: ProductData[];
     movements: any[];
+    customers: any[];
+    suppliers: any[];
+    purchases: any[];
+    sales: any[];
   } = {
     units: [
       { id: 'uom-pcs', name: 'Piece', shortName: 'PCS', decimalAllowed: false, decimalPlaces: 0, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
@@ -104,7 +108,15 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
       { id: 'brand-1', name: 'Tata', description: 'Tata products', isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
     ],
     products: [],
-    movements: []
+    movements: [],
+    customers: [
+      { id: 'cust-walkin', shopId: 'mock-id-1234', customerCode: 'WALKIN', normalizedCustomerCode: 'walkin', name: 'Walk-In Customer', normalizedName: 'walk-in customer', customerType: 'WALK_IN', isActive: true, creditLimit: null, isWalkIn: true, outstanding: 0, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), version: 1 }
+    ],
+    suppliers: [
+      { id: 'sup-1', shopId: 'mock-id-1234', supplierCode: 'SUP-001', name: 'Tata Wholesale', contactPerson: 'Mr. Tata', phone: '9999999999', email: 'tata@wholesale.com', gstNumber: null, outstanding: 1200, isActive: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+    ],
+    purchases: [],
+    sales: []
   };
 
   const mockStock = (productId: string) => mockStorage.movements
@@ -514,6 +526,177 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
       return { success: true, data };
     },
     getPurchaseDashboardSummary: async () => ({ success: true, data: { purchasesToday: 0, purchaseAmountToday: 0, draftPurchases: 0, supplierOutstanding: 0, purchasesDue: 0 } }),
+
+    // Customers
+    getCustomers: async (filter: any) => {
+      let filtered = [...mockStorage.customers];
+      if (filter?.search) {
+        const q = filter.search.toLowerCase();
+        filtered = filtered.filter(c => c.name.toLowerCase().includes(q) || c.customerCode.toLowerCase().includes(q));
+      }
+      return { success: true, data: { items: filtered, pagination: { page: 1, pageSize: 50, totalItems: filtered.length, totalPages: 1 } } };
+    },
+    getCustomerById: async (id: string) => {
+      const c = mockStorage.customers.find(item => item.id === id);
+      return { success: true, data: c || null };
+    },
+    createCustomer: async (input: any) => {
+      const c = {
+        id: 'cust-' + Date.now(),
+        shopId: 'mock-id-1234',
+        customerCode: input.customerCode || ('CUST-' + Date.now()),
+        name: input.name,
+        phone: input.phone || null,
+        email: input.email || null,
+        gstNumber: input.gstNumber || null,
+        creditLimit: input.creditLimit || null,
+        isActive: true,
+        isWalkIn: false,
+        outstanding: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      mockStorage.customers.push(c);
+      return { success: true, data: c };
+    },
+    updateCustomer: async (id: string, input: any) => {
+      const c = mockStorage.customers.find(item => item.id === id);
+      if (!c) return { success: false, error: 'Customer not found' };
+      Object.assign(c, input);
+      c.updatedAt = new Date().toISOString();
+      return { success: true, data: c };
+    },
+    setCustomerActive: async (id: string, isActive: boolean) => {
+      const c = mockStorage.customers.find(item => item.id === id);
+      if (!c) return { success: false, error: 'Customer not found' };
+      c.isActive = isActive;
+      c.updatedAt = new Date().toISOString();
+      return { success: true, data: c };
+    },
+    getCustomerOutstanding: async (_id: string) => ({ success: true, data: { outstandingBalance: 0 } }),
+    getCustomerLedger: async (_customerId: string, _filter: any) => ({ success: true, data: { items: [], pagination: { page: 1, pageSize: 50, totalItems: 0, totalPages: 1 } } }),
+    postCustomerOpeningBalance: async (_input: any) => ({ success: true }),
+
+    // Suppliers
+    getSuppliers: async (filter: any) => {
+      let filtered = [...mockStorage.suppliers];
+      if (filter?.search) {
+        const q = filter.search.toLowerCase();
+        filtered = filtered.filter(s => s.name.toLowerCase().includes(q) || s.supplierCode.toLowerCase().includes(q));
+      }
+      return { success: true, data: { items: filtered, pagination: { page: 1, pageSize: 50, totalItems: filtered.length, totalPages: 1 } } };
+    },
+    getSupplierById: async (id: string) => {
+      const s = mockStorage.suppliers.find(item => item.id === id);
+      return { success: true, data: s || null };
+    },
+    createSupplier: async (input: any) => {
+      const s = {
+        id: 'sup-' + Date.now(),
+        shopId: 'mock-id-1234',
+        supplierCode: input.supplierCode || ('SUP-' + Date.now()),
+        name: input.name,
+        contactPerson: input.contactPerson || null,
+        phone: input.phone || null,
+        email: input.email || null,
+        gstNumber: input.gstNumber || null,
+        outstanding: 0,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      mockStorage.suppliers.push(s);
+      return { success: true, data: s };
+    },
+    updateSupplier: async (id: string, input: any) => {
+      const s = mockStorage.suppliers.find(item => item.id === id);
+      if (!s) return { success: false, error: 'Supplier not found' };
+      Object.assign(s, input);
+      s.updatedAt = new Date().toISOString();
+      return { success: true, data: s };
+    },
+    setSupplierActive: async (id: string, isActive: boolean) => {
+      const s = mockStorage.suppliers.find(item => item.id === id);
+      if (!s) return { success: false, error: 'Supplier not found' };
+      s.isActive = isActive;
+      s.updatedAt = new Date().toISOString();
+      return { success: true, data: s };
+    },
+    getSupplierOutstanding: async (id: string) => {
+      const s = mockStorage.suppliers.find(item => item.id === id);
+      return { success: true, data: { outstandingBalance: s ? s.outstandingBalance : 0 } };
+    },
+
+    // Purchases
+    getPurchases: async (_filter: any) => ({ success: true, data: { items: mockStorage.purchases, pagination: { page: 1, pageSize: 50, totalItems: mockStorage.purchases.length, totalPages: 1 } } }),
+    getPurchaseById: async (id: string) => ({ success: true, data: mockStorage.purchases.find(p => p.id === id) || null }),
+    createPurchaseDraft: async (input: any) => {
+      const p = { id: 'pur-' + Date.now(), invoiceNumber: null, status: 'DRAFT', ...input, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      mockStorage.purchases.push(p);
+      return { success: true, data: p };
+    },
+    updatePurchaseDraft: async (id: string, input: any) => {
+      const p = mockStorage.purchases.find(item => item.id === id);
+      if (!p) return { success: false, error: 'Purchase not found' };
+      Object.assign(p, input);
+      p.updatedAt = new Date().toISOString();
+      return { success: true, data: p };
+    },
+    deletePurchaseDraft: async (id: string) => {
+      mockStorage.purchases = mockStorage.purchases.filter(p => p.id !== id);
+      return { success: true };
+    },
+    calculatePurchase: async (_input: any) => ({ success: true, data: { subtotal: 0, taxTotal: 0, discountTotal: 0, grandTotal: 0 } }),
+    postPurchase: async (id: string) => {
+      const p = mockStorage.purchases.find(item => item.id === id);
+      if (p) p.status = 'POSTED';
+      return { success: true };
+    },
+    cancelPurchase: async (id: string, _reason: string) => {
+      const p = mockStorage.purchases.find(item => item.id === id);
+      if (p) p.status = 'CANCELLED';
+      return { success: true };
+    },
+
+    // Data Import
+    getImportHistory: async () => ({ success: true, data: [] }),
+    getImportTemplates: async () => ({ success: true, data: [] }),
+    getImportColumns: async () => ({ success: true, data: [] }),
+    createImportJob: async () => ({ success: true, data: { id: 'job-mock' } }),
+    parseImportJob: async () => ({ success: true, data: { status: 'PARSED' } }),
+    getColumnMappingProfile: async () => ({ success: true, data: { mappings: [] } }),
+    validateImport: async () => ({ success: true, data: { validRows: 0, errorRows: 0 } }),
+    setImportDuplicatePolicy: async () => ({ success: true }),
+    executeImport: async () => ({ success: true, data: { importedCount: 0 } }),
+    cancelImportJob: async () => ({ success: true }),
+
+    // Sales Drafts
+    createDraftSalesInvoice: async (shopId: string, customerId: string) => {
+      const s = { id: 'sale-' + Date.now(), shopId, customerId, status: 'DRAFT', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+      mockStorage.sales.push(s);
+      return { success: true, data: s };
+    },
+    getDraftSalesInvoice: async (id: string) => ({ success: true, data: mockStorage.sales.find(item => item.id === id) || null }),
+    listDraftSalesInvoices: async (shopId: string) => ({ success: true, data: mockStorage.sales.filter(s => s.shopId === shopId) }),
+    saveDraftSalesInvoice: async (id: string, input: any) => {
+      const s = mockStorage.sales.find(item => item.id === id);
+      if (s) Object.assign(s, input);
+      return { success: true, data: s };
+    },
+    holdSalesInvoice: async (id: string) => {
+      const s = mockStorage.sales.find(item => item.id === id);
+      if (s) s.status = 'HELD';
+      return { success: true };
+    },
+    resumeSalesInvoice: async (id: string) => {
+      const s = mockStorage.sales.find(item => item.id === id);
+      if (s) s.status = 'DRAFT';
+      return { success: true };
+    },
+    deleteDraftSalesInvoice: async (id: string) => {
+      mockStorage.sales = mockStorage.sales.filter(s => s.id !== id);
+      return { success: true };
+    },
   } as any;
 }
 type StartupState =

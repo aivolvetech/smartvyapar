@@ -316,7 +316,7 @@ async function runTests() {
   console.log('\nRunning Test Case 3: Barcode Resolution...');
 
   // Primary barcode
-  let bRes = barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '8901234567890', customerId: walkInCust.id });
+  let bRes = barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '8901234567890', customerId: walkInCust.id, draftDate: '2026-08-04' });
   assert(bRes.productId === productId, 'Primary barcode resolves correct product ID');
   assert(bRes.unitName === 'PCS', 'Primary UOM snapshot loaded');
   assert(bRes.taxCategory === 'GST', 'Tax rate snapshot loaded');
@@ -324,12 +324,12 @@ async function runTests() {
   assert(bRes.priceSource === 'STANDARD_PRICE_BOOK', 'Correct price source');
 
   // Secondary barcode
-  bRes = barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: ' 8901234567891  ', customerId: walkInCust.id });
+  bRes = barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: ' 8901234567891  ', customerId: walkInCust.id, draftDate: '2026-08-04' });
   assert(bRes.productId === productId, 'Secondary barcode resolved successfully after whitespace trim');
 
   // Unknown barcode
   try {
-    barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '9999999999999' });
+    barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '9999999999999', draftDate: '2026-08-04' });
     assert(false, 'Should throw for unknown barcode');
   } catch (err: any) {
     assert(err.message.includes('not found'), 'Unknown barcode correctly rejected');
@@ -338,7 +338,7 @@ async function runTests() {
   // Inactive barcode
   db.prepare("UPDATE ProductBarcode SET isActive = 0 WHERE id = 'bar-choc-1'").run();
   try {
-    barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '8901234567890' });
+    barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '8901234567890', draftDate: '2026-08-04' });
     assert(false, 'Should throw for inactive barcode');
   } catch (err: any) {
     assert(err.message.includes('not found'), 'Inactive barcode correctly rejected');
@@ -352,15 +352,15 @@ async function runTests() {
   console.log('\nRunning Test Case 4: Product Search...');
 
   // Search by code
-  let searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: 'CHOC001', customerId: walkInCust.id });
+  let searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: 'CHOC001', customerId: walkInCust.id, draftDate: '2026-08-04' });
   assert(searchRes.items.length === 1 && searchRes.items[0].productId === productId, 'Search by Product Code works');
 
   // Search by name
-  searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: 'dairy', customerId: walkInCust.id });
+  searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: 'dairy', customerId: walkInCust.id, draftDate: '2026-08-04' });
   assert(searchRes.items.length === 1 && searchRes.items[0].productName === 'Dairy Milk Bar', 'Search by Name works');
 
   // Search by barcode
-  searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: '8901234567890', customerId: walkInCust.id });
+  searchRes = productSearchService.searchPOSProducts({ shopId: shop.id, query: '8901234567890', customerId: walkInCust.id, draftDate: '2026-08-04' });
   assert(searchRes.items.length === 1, 'Search by Barcode works');
 
 

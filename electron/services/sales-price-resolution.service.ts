@@ -1,6 +1,5 @@
 import { getDatabaseConnection } from '../database/database-connection';
 import { POSResolvedPrice, POSPriceSource, POSWarning } from '../../shared/types/pos';
-import { logWarn } from '../utils/logger';
 
 export class SalesPriceResolutionService {
   /**
