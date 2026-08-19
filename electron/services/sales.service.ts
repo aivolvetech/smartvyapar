@@ -13,6 +13,7 @@ import { CustomerLedgerRepository } from '../database/repositories/customer-ledg
 import { ShopRepository } from '../database/repositories/shop.repository';
 import { SalesPriceResolutionService } from './sales-price-resolution.service';
 import { SalesBarcodeResolutionService } from './sales-barcode-resolution.service';
+import { resolveEffectiveNegativeStock } from './stock-policy';
 import {
   SalesInvoice,
   SalesInvoiceLine,
@@ -1408,7 +1409,9 @@ export class SalesService {
             `).get(invoice.shopId, line.productId) as { q: number } | undefined;
             const currentStock = stockRow ? stockRow.q : 0;
 
-            if (currentStock - line.quantity < 0 && !product.allowNegativeStock) {
+            const shop = this.shopRepo.getShop();
+            const allowNegativeStock = resolveEffectiveNegativeStock(product, shop || { allowNegativeStockGlobally: false });
+            if (currentStock - line.quantity < 0 && !allowNegativeStock) {
               throw new Error('INSUFFICIENT_STOCK');
             }
           }
@@ -1580,5 +1583,98 @@ export class SalesService {
     });
 
     return runTx();
+  }
+
+  public calculatePOSCartInMem(
+    shopId: string,
+    customerId: string,
+    linesInput: any[],
+    invoiceDiscountType: 'NONE' | 'PERCENT' | 'AMOUNT',
+    invoiceDiscountValue: number
+  ): any {
+    const customer = this.customerRepo.findById(customerId);
+    if (!customer) throw new Error('Customer not found');
+    const shop = this.shopRepo.getShop();
+    if (!shop) throw new Error('Shop not found');
+
+    const invoice: any = {
+      shopId,
+      customerId,
+      invoiceDate: new Date().toISOString().slice(0, 10),
+      invoiceDiscountType,
+      invoiceDiscountValue
+    };
+
+    const lines: SalesInvoiceLine[] = linesInput.map((lineInput, index) => {
+      const product = this.productRepo.findById(lineInput.productId);
+      if (!product) throw new Error(`Product ${lineInput.productId} not found`);
+      
+      const barcodes = this.barcodeRepo.listByProduct(product.id);
+      const primaryBarcode = barcodes.find(b => b.isPrimary)?.barcode || barcodes[0]?.barcode || null;
+
+      let unitNameSnapshot: string | null = null;
+      if (product.primaryUnitId) {
+        const unit = this.unitRepo.findById(product.primaryUnitId);
+        if (unit) unitNameSnapshot = unit.shortName;
+      }
+
+      let taxCategorySnapshot = 'EXEMPT';
+      let taxRateSnapshot = 0;
+      let cgstRate = 0;
+      let sgstRate = 0;
+      let igstRate = 0;
+      let cessRate = 0;
+
+      if (product.taxRateId) {
+        const tax = this.taxRateRepo.findById(product.taxRateId);
+        if (tax) {
+          taxCategorySnapshot = tax.taxType;
+          taxRateSnapshot = tax.rate;
+          cgstRate = tax.cgstRate || 0;
+          sgstRate = tax.sgstRate || 0;
+          igstRate = tax.igstRate || 0;
+          cessRate = tax.cessRate || 0;
+        }
+      }
+
+      return {
+        id: `temp-line-${index}`,
+        salesInvoiceId: 'temp-invoice',
+        productId: product.id,
+        productCodeSnapshot: product.productCode,
+        productNameSnapshot: product.name,
+        barcodeSnapshot: primaryBarcode,
+        unitId: product.primaryUnitId,
+        unitNameSnapshot,
+        taxRateId: product.taxRateId,
+        taxCategorySnapshot: taxCategorySnapshot as any,
+        taxRateSnapshot,
+        cgstRate,
+        sgstRate,
+        igstRate,
+        cessRate,
+        hsnSacCodeSnapshot: product.hsnSacCode,
+        productTypeSnapshot: product.productType,
+        quantity: lineInput.quantity,
+        unitPrice: lineInput.provisionalUnitPrice,
+        mrp: product.cachedMrp || 0,
+        minimumSellingPrice: null,
+        discountType: lineInput.provisionalDiscountType,
+        discountValue: lineInput.provisionalDiscountValue,
+        discountAmount: 0,
+        invoiceDiscountAllocation: 0,
+        taxableAmount: 0,
+        cgstAmount: 0,
+        sgstAmount: 0,
+        igstAmount: 0,
+        cessAmount: 0,
+        lineTotal: 0,
+        inventoryTransactionId: null,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+    });
+
+    return this.calculateProvisionalTotals(invoice, lines, customer, shop);
   }
 }

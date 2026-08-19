@@ -34,8 +34,8 @@ export class ShopRepository {
       const nowStr = new Date().toISOString();
 
       db.prepare(`
-        INSERT INTO Shop (id, name, phone, address, gstNumber, merchantUpiId, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Shop (id, name, phone, address, gstNumber, merchantUpiId, allowNegativeStockGlobally, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         input.name,
@@ -43,6 +43,7 @@ export class ShopRepository {
         input.address || null,
         input.gstNumber || null,
         input.merchantUpiId || null,
+        input.allowNegativeStockGlobally ? 1 : 0,
         nowStr,
         nowStr
       );
@@ -68,10 +69,11 @@ export class ShopRepository {
       const address = input.address !== undefined ? input.address : existing.address;
       const gstNumber = input.gstNumber !== undefined ? input.gstNumber : existing.gstNumber;
       const merchantUpiId = input.merchantUpiId !== undefined ? input.merchantUpiId : existing.merchantUpiId;
+      const allowNegativeStockGlobally = input.allowNegativeStockGlobally !== undefined ? input.allowNegativeStockGlobally : existing.allowNegativeStockGlobally;
 
       db.prepare(`
         UPDATE Shop
-        SET name = ?, phone = ?, address = ?, gstNumber = ?, merchantUpiId = ?, updatedAt = ?
+        SET name = ?, phone = ?, address = ?, gstNumber = ?, merchantUpiId = ?, allowNegativeStockGlobally = ?, updatedAt = ?
         WHERE id = ?
       `).run(
         name,
@@ -79,6 +81,7 @@ export class ShopRepository {
         address || null,
         gstNumber || null,
         merchantUpiId || null,
+        allowNegativeStockGlobally ? 1 : 0,
         nowStr,
         existing.id
       );

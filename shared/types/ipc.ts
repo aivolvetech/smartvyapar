@@ -31,6 +31,7 @@ export interface ShopData {
   address: string | null;
   gstNumber: string | null;
   merchantUpiId: string | null;
+  allowNegativeStockGlobally?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -41,6 +42,7 @@ export interface ShopCreateInput {
   address?: string;
   gstNumber?: string;
   merchantUpiId?: string;
+  allowNegativeStockGlobally?: boolean;
 }
 
 // --------------------------------------------------------------------------
@@ -208,6 +210,7 @@ export interface ProductData {
   productType: ProductTypeValue;
   trackInventory: boolean;
   allowNegativeStock: boolean;
+  negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
   minimumStockLevel: number | null;
   reorderLevel: number | null;
   maximumStockLevel: number | null;
@@ -261,6 +264,7 @@ export interface CreateProductRequest {
     productType?: ProductTypeValue;
     trackInventory?: boolean;
     allowNegativeStock?: boolean;
+    negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
     minimumStockLevel?: number;
     reorderLevel?: number;
     maximumStockLevel?: number;
@@ -285,6 +289,7 @@ export interface UpdateProductRequest {
     productType?: ProductTypeValue;
     trackInventory?: boolean;
     allowNegativeStock?: boolean;
+    negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
     minimumStockLevel?: number | null;
     reorderLevel?: number | null;
     maximumStockLevel?: number | null;
@@ -491,6 +496,7 @@ export const IPC_CHANNELS = {
   POS_RESUME_BILL: 'pos:resumeBill',
   POS_DELETE_DRAFT: 'pos:deleteDraft',
   POS_POST_SALE: 'pos:postSale',
+  POS_CALCULATE_CART: 'pos:calculateCart',
 } as const;
 
 export type IpcChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];

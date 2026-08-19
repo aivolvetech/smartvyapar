@@ -18,6 +18,7 @@ export function mapRowToProduct(row: any): Product {
     productType: row.productType || 'GOODS',
     trackInventory: Boolean(row.trackInventory),
     allowNegativeStock: Boolean(row.allowNegativeStock),
+    negativeStockPolicy: row.negativeStockPolicy || 'INHERIT',
     minimumStockLevel: row.minimumStockLevel ?? null,
     reorderLevel: row.reorderLevel ?? null,
     maximumStockLevel: row.maximumStockLevel ?? null,

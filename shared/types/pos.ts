@@ -205,3 +205,17 @@ export interface POSCustomerRepriceResult {
     grandTotal: number;
   };
 }
+
+export interface POSCalculateCartRequest {
+  shopId: string;
+  customerId: string;
+  lines: POSCartLineInput[];
+  invoiceDiscountType: 'NONE' | 'PERCENT' | 'AMOUNT';
+  invoiceDiscountValue: number;
+}
+
+export interface POSCalculateCartResponse {
+  success: boolean;
+  cart?: POSCart;
+  error?: string;
+}

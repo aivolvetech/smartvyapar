@@ -850,6 +850,7 @@ export default function App() {
   const [address, setAddress] = useState('');
   const [gstNumber, setGstNumber] = useState('');
   const [merchantUpiId, setMerchantUpiId] = useState('');
+  const [allowNegativeStockGlobally, setAllowNegativeStockGlobally] = useState(false);
   
   // UI States
   const [submitting, setSubmitting] = useState(false);
@@ -950,6 +951,7 @@ export default function App() {
           setAddress(shopRes.data.address || '');
           setGstNumber(shopRes.data.gstNumber || '');
           setMerchantUpiId(shopRes.data.merchantUpiId || '');
+          setAllowNegativeStockGlobally(shopRes.data.allowNegativeStockGlobally || false);
           setStartupState('READY');
         } else {
           setStartupState('SETUP_REQUIRED');
@@ -1005,6 +1007,7 @@ export default function App() {
         address: address.trim() || undefined,
         gstNumber: gstNumber.trim().toUpperCase() || undefined,
         merchantUpiId: merchantUpiId.trim() || undefined,
+        allowNegativeStockGlobally,
       });
 
       if (res.success && res.data) {
@@ -1014,6 +1017,7 @@ export default function App() {
         setAddress(res.data.address || '');
         setGstNumber(res.data.gstNumber || '');
         setMerchantUpiId(res.data.merchantUpiId || '');
+        setAllowNegativeStockGlobally(res.data.allowNegativeStockGlobally || false);
         setToast({ type: 'success', message: 'Shop profile saved securely.' });
         
         if (startupState === 'SETUP_REQUIRED') {
@@ -1171,6 +1175,21 @@ export default function App() {
                 placeholder="e.g. merchant@upi"
                 disabled={submitting}
               />
+            </div>
+
+            <div className="form-group">
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={allowNegativeStockGlobally}
+                  onChange={(e) => setAllowNegativeStockGlobally(e.target.checked)}
+                  disabled={submitting}
+                />
+                <span>Allow Negative Stock Globally (ON/OFF)</span>
+              </label>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                Products using Inherit Shop Setting can be sold below available stock when this is enabled.
+              </span>
             </div>
 
             <button type="submit" className="app-btn btn-primary" style={{ width: '100%', marginTop: '0.5rem' }} disabled={submitting}>
@@ -1462,6 +1481,21 @@ export default function App() {
                       onChange={(e) => setMerchantUpiId(e.target.value)}
                       disabled={submitting}
                     />
+                  </div>
+
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: 'var(--text-primary)', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={allowNegativeStockGlobally}
+                        onChange={(e) => setAllowNegativeStockGlobally(e.target.checked)}
+                        disabled={submitting}
+                      />
+                      <span>Allow Negative Stock Globally (ON/OFF)</span>
+                    </label>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                      Products using Inherit Shop Setting can be sold below available stock when this is enabled.
+                    </span>
                   </div>
 
                   <button type="submit" className="app-btn btn-primary" disabled={submitting}>

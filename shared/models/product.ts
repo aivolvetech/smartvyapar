@@ -16,6 +16,7 @@ export interface Product {
   productType: ProductType;
   trackInventory: boolean;
   allowNegativeStock: boolean;
+  negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
   minimumStockLevel: number | null;
   reorderLevel: number | null;
   maximumStockLevel: number | null;
@@ -45,6 +46,7 @@ export interface CreateProductInput {
   productType?: ProductType;
   trackInventory?: boolean;
   allowNegativeStock?: boolean;
+  negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
   minimumStockLevel?: number;
   reorderLevel?: number;
   maximumStockLevel?: number;
@@ -64,6 +66,7 @@ export interface UpdateProductInput {
   productType?: ProductType;
   trackInventory?: boolean;
   allowNegativeStock?: boolean;
+  negativeStockPolicy?: 'INHERIT' | 'ALLOW' | 'BLOCK';
   minimumStockLevel?: number | null;
   reorderLevel?: number | null;
   maximumStockLevel?: number | null;

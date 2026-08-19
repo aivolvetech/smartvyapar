@@ -56,7 +56,7 @@ export default function ProductForm({ productId, onSuccess, onCancel }: Props) {
   // Section 6: Stock
   const [productType, setProductType]     = useState<'GOODS' | 'SERVICE'>('GOODS');
   const [trackInventory, setTrackInv]     = useState(true);
-  const [allowNegative, setAllowNeg]      = useState(false);
+  const [negativeStockPolicy, setNegativeStockPolicy] = useState<'INHERIT' | 'ALLOW' | 'BLOCK'>('INHERIT');
   const [minStock, setMinStock]           = useState('');
   const [reorderLevel, setReorder]        = useState('');
   const [maxStock, setMaxStock]           = useState('');
@@ -108,7 +108,7 @@ export default function ProductForm({ productId, onSuccess, onCancel }: Props) {
         setBarcodes(p.barcodes.map(b => ({ barcode: b.barcode, barcodeType: b.barcodeType, isPrimary: b.isPrimary })));
         setProductType(p.productType);
         setTrackInv(p.trackInventory);
-        setAllowNeg(p.allowNegativeStock);
+        setNegativeStockPolicy(p.negativeStockPolicy || (p.allowNegativeStock ? 'ALLOW' : 'INHERIT'));
         setMinStock(p.minimumStockLevel !== null ? String(p.minimumStockLevel) : '');
         setReorder(p.reorderLevel !== null ? String(p.reorderLevel) : '');
         setMaxStock(p.maximumStockLevel !== null ? String(p.maximumStockLevel) : '');
@@ -197,7 +197,8 @@ export default function ProductForm({ productId, onSuccess, onCancel }: Props) {
         taxRateId: taxRateId || undefined,
         productType,
         trackInventory: productType === 'SERVICE' ? false : trackInventory,
-        allowNegativeStock: productType === 'SERVICE' ? false : allowNegative,
+        allowNegativeStock: productType === 'SERVICE' ? false : (negativeStockPolicy === 'ALLOW'),
+        negativeStockPolicy: productType === 'SERVICE' ? 'BLOCK' : negativeStockPolicy,
         minimumStockLevel: minStock ? Number(minStock) : undefined,
         reorderLevel: reorderLevel ? Number(reorderLevel) : undefined,
         maximumStockLevel: maxStock ? Number(maxStock) : undefined,
@@ -453,7 +454,7 @@ export default function ProductForm({ productId, onSuccess, onCancel }: Props) {
               onChange={e => {
                 const t = e.target.value as 'GOODS' | 'SERVICE';
                 setProductType(t);
-                if (t === 'SERVICE') { setTrackInv(false); setAllowNeg(false); }
+                 if (t === 'SERVICE') { setTrackInv(false); setNegativeStockPolicy('BLOCK'); }
               }} disabled={submitting}>
               <option value="GOODS">Goods (Physical Product)</option>
               <option value="SERVICE">Service (Non-Physical)</option>
@@ -465,14 +466,27 @@ export default function ProductForm({ productId, onSuccess, onCancel }: Props) {
           <>
             <div style={{ display: 'flex', gap: 'var(--space-lg)', flexWrap: 'wrap' }}>
               <label className="form-checkbox-row">
-                <input type="checkbox" checked={trackInventory} onChange={e => { setTrackInv(e.target.checked); if (!e.target.checked) setAllowNeg(false); }} />
+                 <input type="checkbox" checked={trackInventory} onChange={e => { setTrackInv(e.target.checked); if (!e.target.checked) setNegativeStockPolicy('BLOCK'); }} />
                 Track Inventory
               </label>
               {trackInventory && (
-                <label className="form-checkbox-row">
-                  <input type="checkbox" checked={allowNegative} onChange={e => setAllowNeg(e.target.checked)} />
-                  Allow Negative Stock
-                </label>
+                <div className="form-group" style={{ minWidth: '220px' }}>
+                  <label htmlFor="pf-neg-policy">Negative Stock Policy</label>
+                  <select
+                    id="pf-neg-policy"
+                    className="form-input"
+                    value={negativeStockPolicy}
+                    onChange={e => {
+                      const val = e.target.value as any;
+                      setNegativeStockPolicy(val);
+                    }}
+                    disabled={submitting}
+                  >
+                    <option value="INHERIT">Inherit Shop Setting</option>
+                    <option value="ALLOW">Allow</option>
+                    <option value="BLOCK">Block</option>
+                  </select>
+                </div>
               )}
             </div>
 

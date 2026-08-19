@@ -5,6 +5,7 @@ export interface Shop {
   address?: string | null;
   gstNumber?: string | null;
   merchantUpiId?: string | null;
+  allowNegativeStockGlobally?: boolean;
   createdAt: string;
   updatedAt: string;
 }
@@ -15,6 +16,7 @@ export interface CreateShopInput {
   address?: string;
   gstNumber?: string;
   merchantUpiId?: string;
+  allowNegativeStockGlobally?: boolean;
 }
 
 export interface UpdateShopInput {
@@ -23,4 +25,5 @@ export interface UpdateShopInput {
   address?: string | null;
   gstNumber?: string | null;
   merchantUpiId?: string | null;
+  allowNegativeStockGlobally?: boolean;
 }

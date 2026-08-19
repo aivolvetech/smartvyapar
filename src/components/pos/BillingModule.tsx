@@ -143,17 +143,46 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         draftRes = current.success && current.data?.status === 'HELD'
           ? await (window as any).smartVyapar.resumePOSDraft(initialInvoiceId, shopId)
           : current;
+        if (draftRes.success) {
+          setDraft(draftRes.data);
+          setSelectedCustomerId(draftRes.data.customerId || targetCustId || '');
+          setCheckoutToken(Date.now().toString());
+          onInitialInvoiceLoaded?.();
+        } else {
+          setError(getFriendlyError(draftRes.error) || 'Failed to initialize POS draft.');
+        }
       } else {
-        draftRes = await (window as any).smartVyapar.createPOSDraft(shopId, targetCustId);
-      }
-      
-      if (draftRes.success) {
-        setDraft(draftRes.data);
-        setSelectedCustomerId(draftRes.data.customerId || targetCustId || '');
+        // Initialize an unsaved working cart in-memory
+        const dummyDraft = {
+          id: 'unsaved-cart',
+          shopId,
+          customerId: targetCustId,
+          draftReference: 'UNSAVED-BILL',
+          invoiceDate: new Date().toISOString().slice(0, 10),
+          dueDate: null,
+          status: 'DRAFT',
+          notes: null,
+          cart: {
+            lines: [],
+            subtotal: 0,
+            lineDiscountTotal: 0,
+            invoiceDiscountType: 'NONE',
+            invoiceDiscountValue: 0,
+            invoiceDiscountTotal: 0,
+            taxableAmount: 0,
+            cgstTotal: 0,
+            sgstTotal: 0,
+            igstTotal: 0,
+            cessTotal: 0,
+            roundOff: 0,
+            grandTotal: 0
+          },
+          version: 1,
+          isUnsaved: true
+        };
+        setDraft(dummyDraft);
+        setSelectedCustomerId(targetCustId || '');
         setCheckoutToken(Date.now().toString());
-        if (initialInvoiceId) onInitialInvoiceLoaded?.();
-      } else {
-        setError(getFriendlyError(draftRes.error) || 'Failed to initialize POS draft.');
       }
     }
   };
@@ -253,6 +282,39 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     setError('');
     resetPayments();
     
+    if (draft.isUnsaved) {
+      try {
+        const linesInput = draft.cart.lines.map((l: any) => ({
+          productId: l.productId,
+          quantity: l.quantity,
+          provisionalUnitPrice: l.provisionalUnitPrice !== undefined ? l.provisionalUnitPrice : l.unitPrice,
+          provisionalDiscountType: l.provisionalDiscountType !== undefined ? l.provisionalDiscountType : l.discountType || 'NONE',
+          provisionalDiscountValue: l.provisionalDiscountValue !== undefined ? l.provisionalDiscountValue : l.discountValue || 0
+        }));
+
+        const calcRes = await (window as any).smartVyapar.calculatePOSCart({
+          shopId,
+          customerId: custId,
+          lines: linesInput,
+          invoiceDiscountType: draft.cart.invoiceDiscountType || 'NONE',
+          invoiceDiscountValue: draft.cart.invoiceDiscountValue || 0
+        });
+        if (calcRes.success) {
+          setDraft({
+            ...draft,
+            customerId: custId,
+            cart: calcRes.data
+          });
+          setCheckoutToken(Date.now().toString());
+        } else {
+          setError(calcRes.error || 'Failed to recalculate cart.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Error updating customer.');
+      }
+      return;
+    }
+    
     try {
       const res = await (window as any).smartVyapar.repricePOSCartForCustomer({
         invoiceId: draft.id,
@@ -308,6 +370,51 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         draftDate: draft.invoiceDate
       });
       if (res.success && res.data) {
+        if (draft.isUnsaved) {
+          const existingIndex = draft.cart.lines.findIndex((l: any) => l.productId === res.data.productId);
+          let newLines = [...draft.cart.lines];
+          if (existingIndex >= 0) {
+            newLines[existingIndex] = {
+              ...newLines[existingIndex],
+              quantity: newLines[existingIndex].quantity + 1
+            };
+          } else {
+            newLines.push({
+              productId: res.data.productId,
+              quantity: 1,
+              provisionalUnitPrice: res.data.sellingPrice,
+              provisionalDiscountType: 'NONE',
+              provisionalDiscountValue: 0
+            });
+          }
+          const linesInput = newLines.map((l: any) => ({
+            productId: l.productId,
+            quantity: l.quantity,
+            provisionalUnitPrice: l.provisionalUnitPrice !== undefined ? l.provisionalUnitPrice : l.unitPrice,
+            provisionalDiscountType: l.provisionalDiscountType !== undefined ? l.provisionalDiscountType : l.discountType || 'NONE',
+            provisionalDiscountValue: l.provisionalDiscountValue !== undefined ? l.provisionalDiscountValue : l.discountValue || 0
+          }));
+          const calcRes = await (window as any).smartVyapar.calculatePOSCart({
+            shopId,
+            customerId: selectedCustomerId,
+            lines: linesInput,
+            invoiceDiscountType: draft.cart.invoiceDiscountType || 'NONE',
+            invoiceDiscountValue: draft.cart.invoiceDiscountValue || 0
+          });
+          if (calcRes.success) {
+            setDraft({
+              ...draft,
+              cart: calcRes.data
+            });
+            setCheckoutToken(Date.now().toString());
+            setBarcodeInput('');
+            barcodeInputRef.current?.focus();
+          } else {
+            setError(calcRes.error || 'Failed to recalculate cart.');
+          }
+          return;
+        }
+
         // Add product to draft. The backend automatically increments quantity if already exists.
         const addRes = await (window as any).smartVyapar.addPOSDraftLine(draft.id, {
           productId: res.data.productId,
@@ -341,6 +448,57 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     if (!draft) return;
     setError('');
     resetPayments();
+
+    if (draft.isUnsaved) {
+      try {
+        const existingIndex = draft.cart.lines.findIndex((l: any) => l.productId === productId);
+        let newLines = [...draft.cart.lines];
+        if (existingIndex >= 0) {
+          newLines[existingIndex] = {
+            ...newLines[existingIndex],
+            quantity: newLines[existingIndex].quantity + 1
+          };
+        } else {
+          newLines.push({
+            productId,
+            quantity: 1,
+            provisionalUnitPrice: price,
+            provisionalDiscountType: 'NONE',
+            provisionalDiscountValue: 0
+          });
+        }
+        const linesInput = newLines.map((l: any) => ({
+          productId: l.productId,
+          quantity: l.quantity,
+          provisionalUnitPrice: l.provisionalUnitPrice !== undefined ? l.provisionalUnitPrice : l.unitPrice,
+          provisionalDiscountType: l.provisionalDiscountType !== undefined ? l.provisionalDiscountType : l.discountType || 'NONE',
+          provisionalDiscountValue: l.provisionalDiscountValue !== undefined ? l.provisionalDiscountValue : l.discountValue || 0
+        }));
+        const calcRes = await (window as any).smartVyapar.calculatePOSCart({
+          shopId,
+          customerId: selectedCustomerId,
+          lines: linesInput,
+          invoiceDiscountType: draft.cart.invoiceDiscountType || 'NONE',
+          invoiceDiscountValue: draft.cart.invoiceDiscountValue || 0
+        });
+        if (calcRes.success) {
+          setDraft({
+            ...draft,
+            cart: calcRes.data
+          });
+          setCheckoutToken(Date.now().toString());
+          setSearchQuery('');
+          setSearchResults([]);
+          barcodeInputRef.current?.focus();
+        } else {
+          setError(calcRes.error || 'Failed to add product.');
+        }
+      } catch (err: any) {
+        setError(err.message || 'Error adding product.');
+      }
+      return;
+    }
+
     try {
       const res = await (window as any).smartVyapar.addPOSDraftLine(draft.id, {
         productId,
@@ -368,6 +526,46 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     if (!draft) return;
     setError('');
     resetPayments();
+
+    if (draft.isUnsaved) {
+      const idx = draft.cart.lines.findIndex((l: any) => l.id === lineId);
+      if (idx < 0) return;
+      let newLines = [...draft.cart.lines];
+      newLines[idx] = {
+        ...newLines[idx],
+        quantity: qty,
+        provisionalUnitPrice: price,
+        provisionalDiscountType: discType,
+        provisionalDiscountValue: discVal
+      };
+
+      const linesInput = newLines.map((l: any) => ({
+        productId: l.productId,
+        quantity: l.quantity,
+        provisionalUnitPrice: l.provisionalUnitPrice !== undefined ? l.provisionalUnitPrice : l.unitPrice,
+        provisionalDiscountType: l.provisionalDiscountType !== undefined ? l.provisionalDiscountType : l.discountType || 'NONE',
+        provisionalDiscountValue: l.provisionalDiscountValue !== undefined ? l.provisionalDiscountValue : l.discountValue || 0
+      }));
+
+      const calcRes = await (window as any).smartVyapar.calculatePOSCart({
+        shopId,
+        customerId: selectedCustomerId,
+        lines: linesInput,
+        invoiceDiscountType: draft.cart.invoiceDiscountType || 'NONE',
+        invoiceDiscountValue: draft.cart.invoiceDiscountValue || 0
+      });
+      if (calcRes.success) {
+        setDraft({
+          ...draft,
+          cart: calcRes.data
+        });
+        setCheckoutToken(Date.now().toString());
+      } else {
+        setError(calcRes.error || 'Failed to update item details.');
+      }
+      return;
+    }
+
     try {
       const res = await (window as any).smartVyapar.updatePOSDraftLine(draft.id, lineId, {
         quantity: qty,
@@ -391,6 +589,35 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     if (!draft) return;
     setError('');
     resetPayments();
+
+    if (draft.isUnsaved) {
+      const newLines = draft.cart.lines.filter((l: any) => l.id !== lineId);
+      const linesInput = newLines.map((l: any) => ({
+        productId: l.productId,
+        quantity: l.quantity,
+        provisionalUnitPrice: l.provisionalUnitPrice !== undefined ? l.provisionalUnitPrice : l.unitPrice,
+        provisionalDiscountType: l.provisionalDiscountType !== undefined ? l.provisionalDiscountType : l.discountType || 'NONE',
+        provisionalDiscountValue: l.provisionalDiscountValue !== undefined ? l.provisionalDiscountValue : l.discountValue || 0
+      }));
+      const calcRes = await (window as any).smartVyapar.calculatePOSCart({
+        shopId,
+        customerId: selectedCustomerId,
+        lines: linesInput,
+        invoiceDiscountType: draft.cart.invoiceDiscountType || 'NONE',
+        invoiceDiscountValue: draft.cart.invoiceDiscountValue || 0
+      });
+      if (calcRes.success) {
+        setDraft({
+          ...draft,
+          cart: calcRes.data
+        });
+        setCheckoutToken(Date.now().toString());
+      } else {
+        setError(calcRes.error || 'Failed to remove line.');
+      }
+      return;
+    }
+
     try {
       const res = await (window as any).smartVyapar.removePOSDraftLine(draft.id, lineId);
       if (res.success) {
@@ -451,9 +678,22 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   // Save draft cart state
   const handleSaveDraft = async () => {
     if (!draft) return;
+    if (draft.cart.lines.length === 0) {
+      setError('Add at least one item before saving a draft.');
+      return;
+    }
     setError('');
     try {
-      const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
+      let activeId = draft.id;
+      if (draft.isUnsaved) {
+        const createRes = await (window as any).smartVyapar.createPOSDraft(shopId, selectedCustomerId);
+        if (!createRes.success || !createRes.data) {
+          throw new Error(createRes.error || 'Failed to create draft in database.');
+        }
+        activeId = createRes.data.id;
+      }
+
+      const saveRes = await (window as any).smartVyapar.savePOSDraft(activeId, {
         customerId: selectedCustomerId,
         invoiceDate: draft.invoiceDate,
         dueDate: draft.dueDate,
@@ -469,9 +709,8 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         }))
       });
       if (saveRes.success) {
-        const savedRef = draft.draftReference;
         await initializePOS();
-        alert(`Draft saved successfully! Reference: ${savedRef}`);
+        alert(`Draft saved successfully!`);
       } else {
         setError(getFriendlyError(saveRes.error) || 'Failed to save draft.');
       }
@@ -489,8 +728,17 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     }
     setError('');
     try {
+      let activeId = draft.id;
+      if (draft.isUnsaved) {
+        const createRes = await (window as any).smartVyapar.createPOSDraft(shopId, selectedCustomerId);
+        if (!createRes.success || !createRes.data) {
+          throw new Error(createRes.error || 'Failed to create draft in database.');
+        }
+        activeId = createRes.data.id;
+      }
+
       // 1. Save draft payload first
-      const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
+      const saveRes = await (window as any).smartVyapar.savePOSDraft(activeId, {
         customerId: selectedCustomerId,
         invoiceDate: draft.invoiceDate,
         dueDate: draft.dueDate,
@@ -507,16 +755,15 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
       });
       if (saveRes.success) {
         // 2. Mark draft as HELD
-        const holdRes = await (window as any).smartVyapar.holdPOSDraft(draft.id, shopId);
+        const holdRes = await (window as any).smartVyapar.holdPOSDraft(activeId, shopId);
         if (holdRes.success) {
-          const heldRef = draft.draftReference;
           await initializePOS();
-          alert(`Bill held successfully! Reference: ${heldRef}`);
+          alert(`Bill parked successfully!`);
         } else {
-          setError(getFriendlyError(holdRes.error) || 'Failed to hold bill.');
+          setError(getFriendlyError(holdRes.error) || 'Failed to park bill.');
         }
       } else {
-        setError(getFriendlyError(saveRes.error) || 'Failed to save draft before holding.');
+        setError(getFriendlyError(saveRes.error) || 'Failed to save draft.');
       }
     } catch (err: any) {
       setError(getFriendlyError(err.message) || 'Error holding bill.');
@@ -529,6 +776,27 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     if (draft.cart.lines.length === 0) return;
     if (window.confirm('Are you sure you want to clear all items in the current cart?')) {
       setError('');
+      if (draft.isUnsaved) {
+        setDraft({
+          ...draft,
+          cart: {
+            ...draft.cart,
+            lines: [],
+            subtotal: 0,
+            lineDiscountTotal: 0,
+            invoiceDiscountTotal: 0,
+            taxableAmount: 0,
+            cgstTotal: 0,
+            sgstTotal: 0,
+            igstTotal: 0,
+            cessTotal: 0,
+            roundOff: 0,
+            grandTotal: 0
+          }
+        });
+        setCheckoutToken(Date.now().toString());
+        return;
+      }
       try {
         const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
           customerId: selectedCustomerId,
@@ -697,10 +965,60 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         confirmedUpiAmount: upiAmount
       };
 
+      let activeId = draft.id;
+      let activeVersion = draft.version;
+
+      if (draft.isUnsaved) {
+        const createRes = await (window as any).smartVyapar.createPOSDraft(shopId, selectedCustomerId);
+        if (!createRes.success || !createRes.data) {
+          throw new Error(createRes.error || 'Failed to initialize database transaction.');
+        }
+        activeId = createRes.data.id;
+        activeVersion = createRes.data.version;
+
+        const saveRes = await (window as any).smartVyapar.savePOSDraft(activeId, {
+          customerId: selectedCustomerId,
+          invoiceDate: draft.invoiceDate,
+          dueDate: draft.dueDate,
+          invoiceDiscountType: draft.cart.invoiceDiscountType,
+          invoiceDiscountValue: draft.cart.invoiceDiscountValue,
+          notes: draft.notes,
+          lines: draft.cart.lines.map((l: any) => ({
+            productId: l.productId,
+            quantity: l.quantity,
+            provisionalUnitPrice: l.unitPrice,
+            provisionalDiscountType: l.discountType,
+            provisionalDiscountValue: l.discountValue
+          }))
+        });
+        if (!saveRes.success) {
+          throw new Error(saveRes.error || 'Failed to persist cart items.');
+        }
+      } else {
+        const saveRes = await (window as any).smartVyapar.savePOSDraft(activeId, {
+          customerId: selectedCustomerId,
+          invoiceDate: draft.invoiceDate,
+          dueDate: draft.dueDate,
+          invoiceDiscountType: draft.cart.invoiceDiscountType,
+          invoiceDiscountValue: draft.cart.invoiceDiscountValue,
+          notes: draft.notes,
+          lines: draft.cart.lines.map((l: any) => ({
+            productId: l.productId,
+            quantity: l.quantity,
+            provisionalUnitPrice: l.unitPrice,
+            provisionalDiscountType: l.discountType,
+            provisionalDiscountValue: l.discountValue
+          }))
+        });
+        if (!saveRes.success) {
+          throw new Error(saveRes.error || 'Failed to save cart items.');
+        }
+      }
+
       const res = await (window as any).smartVyapar.postPOSSale(
-        draft.id,
+        activeId,
         paymentsPayload,
-        draft.version,
+        activeVersion,
         paymentContext
       );
 

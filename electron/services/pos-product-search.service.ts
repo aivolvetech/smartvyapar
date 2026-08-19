@@ -1,6 +1,7 @@
 import { getDatabaseConnection } from '../database/database-connection';
 import { POSProductSearchResult, POSProductResult } from '../../shared/types/pos';
 import { SalesPriceResolutionService } from './sales-price-resolution.service';
+import { resolveEffectiveNegativeStock } from './stock-policy';
 
 export class POSProductSearchService {
   private priceResolutionService = new SalesPriceResolutionService();
@@ -14,6 +15,7 @@ export class POSProductSearchService {
     pageSize?: number;
   }): POSProductSearchResult {
     const db = getDatabaseConnection();
+    const shop = db.prepare('SELECT * FROM Shop WHERE id = ?').get(input.shopId) as any;
     const queryStr = (input.query || '').trim().toLowerCase();
     const page = input.page && input.page > 0 ? input.page : 1;
     const pageSize = input.pageSize && input.pageSize > 0 ? input.pageSize : 20;
@@ -185,7 +187,7 @@ export class POSProductSearchService {
           currentStock,
           stockAsOf: todayStr,
           trackInventory: Boolean(p.trackInventory),
-          allowNegativeStock: Boolean(p.allowNegativeStock),
+          allowNegativeStock: resolveEffectiveNegativeStock(p, shop || { allowNegativeStockGlobally: 0 }),
           warnings: priceResolution.warnings,
         });
       } catch (err: any) {

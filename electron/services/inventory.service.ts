@@ -1,6 +1,7 @@
 import { getDatabaseConnection } from '../database/database-connection';
 import { ProductRepository } from '../database/repositories/product.repository';
 import { ShopRepository } from '../database/repositories/shop.repository';
+import { resolveEffectiveNegativeStock } from './stock-policy';
 import { InventoryAdjustmentRepository } from '../database/repositories/inventory-adjustment.repository';
 import { InventoryReportRepository } from '../database/repositories/inventory-report.repository';
 import { InventoryTransactionRepository } from '../database/repositories/inventory-transaction.repository';
@@ -142,7 +143,7 @@ export class InventoryService {
       const shop = this.requireShop();
       const reversalQuantity = -original.quantity;
       if (reversalQuantity < 0) {
-        this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(reversalQuantity), product.allowNegativeStock);
+        this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(reversalQuantity));
       }
 
       return this.transactionRepo.create({
@@ -170,7 +171,7 @@ export class InventoryService {
       const shop = this.requireShop();
       const current = this.transactionRepo.currentStock(shop.id, product.id);
       if (signedQuantity < 0) {
-        this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(signedQuantity), product.allowNegativeStock);
+        this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(signedQuantity));
       }
       const unitCost = this.resolveUnitCost(shop.id, product.id, signedQuantity, suppliedUnitCost);
       const adjustment = this.adjustmentRepo.createPosted({
@@ -252,7 +253,7 @@ export class InventoryService {
     return db.transaction(() => {
       const product = this.requireInventoryProduct(input.productId);
       const shop = this.requireShop();
-      this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(input.quantity), product.allowNegativeStock);
+      this.ensureNegativeStockAllowed(shop.id, product.id, Math.abs(input.quantity));
       const unitCost = this.resolveUnitCost(shop.id, product.id, -Math.abs(input.quantity));
       const adjustment = this.adjustmentRepo.createPosted({
         adjustmentType: input.transactionType,
@@ -293,7 +294,13 @@ export class InventoryService {
     return this.transactionRepo.averageCost(shopId, productId) ?? 0;
   }
 
-  private ensureNegativeStockAllowed(shopId: string, productId: string, requestedOut: number, allowNegativeStock: boolean): void {
+  private ensureNegativeStockAllowed(shopId: string, productId: string, requestedOut: number): void {
+    const product = this.productRepo.findById(productId);
+    if (!product) return;
+    const shop = this.shopRepo.getShop();
+    if (!shop) return;
+    const allowNegativeStock = resolveEffectiveNegativeStock(product, shop);
+
     const current = this.transactionRepo.currentStock(shopId, productId);
     if (!allowNegativeStock && current - requestedOut < 0) {
       throw new Error(`Insufficient stock. Available: ${current}, requested: ${requestedOut}.`);

@@ -1,6 +1,7 @@
 import { getDatabaseConnection } from '../database/database-connection';
 import { POSProductResult } from '../../shared/types/pos';
 import { SalesPriceResolutionService } from './sales-price-resolution.service';
+import { resolveEffectiveNegativeStock } from './stock-policy';
 
 export class SalesBarcodeResolutionService {
   private priceResolutionService = new SalesPriceResolutionService();
@@ -12,6 +13,7 @@ export class SalesBarcodeResolutionService {
     draftDate?: string;
   }): POSProductResult {
     const db = getDatabaseConnection();
+    const shop = db.prepare('SELECT * FROM Shop WHERE id = ?').get(input.shopId) as any;
     
     // 1. Normalize barcode deterministically
     const normalizedBarcode = input.barcode.trim();
@@ -116,7 +118,7 @@ export class SalesBarcodeResolutionService {
       currentStock,
       stockAsOf: new Date().toISOString(),
       trackInventory: Boolean(product.trackInventory),
-      allowNegativeStock: Boolean(product.allowNegativeStock),
+      allowNegativeStock: resolveEffectiveNegativeStock(product, shop || { allowNegativeStockGlobally: 0 }),
       warnings: priceResolution.warnings,
     };
   }

@@ -185,8 +185,10 @@ export default function ProductView({ productId, onEdit, onBack }: Props) {
                       <span className="info-val">{stock ? stock.stockStatus.replace(/_/g, ' ') : 'Loading...'}</span>
                     </div>
                     <div className="info-row">
-                      <span className="info-key">Allow Negative Stock</span>
-                      <span className="info-val">{product.allowNegativeStock ? 'Yes' : 'No'}</span>
+                      <span className="info-key">Negative Stock Policy</span>
+                      <span className="info-val" style={{ textTransform: 'capitalize' }}>
+                        {product.negativeStockPolicy ? product.negativeStockPolicy.toLowerCase() : (product.allowNegativeStock ? 'allow' : 'inherit')}
+                      </span>
                     </div>
                     <div className="info-row">
                       <span className="info-key">Min Stock Level</span>

@@ -387,4 +387,20 @@ export function registerSalesIpc() {
       return { success: false, error: err.message || 'Failed to post POS sale.' };
     }
   });
+
+  ipcMain.handle(IPC_CHANNELS.POS_CALCULATE_CART, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const { shopId, customerId, lines, invoiceDiscountType, invoiceDiscountValue } = payload || {};
+      if (!shopId) return { success: false, error: 'Shop ID is required.' };
+      if (!customerId) return { success: false, error: 'Customer ID is required.' };
+      if (!Array.isArray(lines)) return { success: false, error: 'Lines must be an array.' };
+
+      const cart = salesService.calculatePOSCartInMem(shopId, customerId, lines, invoiceDiscountType || 'NONE', invoiceDiscountValue || 0);
+      return { success: true, data: cart };
+    } catch (err: any) {
+      logError('IPC pos:calculateCart failed', err);
+      return { success: false, error: err.message || 'Failed to calculate POS cart.' };
+    }
+  });
 }

@@ -478,6 +478,200 @@ async function runTests() {
   const deletedDraft = postDeleteInvoices.find(i => i.id === draftTest13.id);
   assert(!deletedDraft, 'Draft successfully deleted from pending bills list');
 
+  // Test 14: Negative Stock Policy Integration
+  console.log('\nTesting Negative Stock Policies...');
+  
+  // Set shop settings to Allow Negative Stock Globally = OFF (false)
+  shopRepo.updateShop({ allowNegativeStockGlobally: false });
+  
+  // Create a product with INHERIT policy
+  const productInherit = await productService.createProduct({
+    product: {
+      productCode: 'NEG-INH',
+      name: 'Negative Inherit Product',
+      primaryUnitId: product1.primaryUnitId,
+      taxRateId: product1.taxRateId,
+      productType: 'GOODS',
+      trackInventory: true,
+      allowNegativeStock: false,
+      negativeStockPolicy: 'INHERIT'
+    },
+    barcodes: [],
+    defaultPrice: { purchasePrice: 5.00, sellingPrice: 10.00, mrp: 15.00 },
+    openingBalance: null
+  });
+  
+  // Verify stock is 0
+  const stockInherit = getDatabaseConnection().prepare(`
+    SELECT COALESCE(SUM(quantity), 0) AS q FROM InventoryTransaction WHERE productId = ?
+  `).get(productInherit.id) as { q: number };
+  assert(stockInherit.q === 0, 'Initial stock for NEG-INH is 0');
+  
+  // Under Shop OFF + Product INHERIT, posting a sale of 1 unit must fail with INSUFFICIENT_STOCK
+  try {
+    const d1 = salesService.createDraftForPOS(shop.id, customer.id);
+    const savedD1 = salesService.saveDraftFromPOS(d1.id, {
+      customerId: customer.id,
+      invoiceDate: '2026-08-19',
+      dueDate: null,
+      invoiceDiscountType: 'NONE',
+      invoiceDiscountValue: 0,
+      notes: 'Test INHERIT BLOCK',
+      lines: [{
+        productId: productInherit.id,
+        quantity: 1,
+        provisionalUnitPrice: 10.00,
+        provisionalDiscountType: 'NONE',
+        provisionalDiscountValue: 0
+      }]
+    });
+    salesService.postSale(d1.id, [{ paymentMode: 'CASH', amount: savedD1.cart.grandTotal }], savedD1.version);
+    assert(false, 'Should fail under Shop OFF + Product INHERIT');
+  } catch (err: any) {
+    assert(err.message === 'INSUFFICIENT_STOCK', 'Blocks negative sale under Shop OFF + Product INHERIT');
+  }
+  
+  // Set shop settings to Allow Negative Stock Globally = ON (true)
+  shopRepo.updateShop({ allowNegativeStockGlobally: true });
+  
+  // Under Shop ON + Product INHERIT, posting must succeed and inventory must go negative
+  const d2 = salesService.createDraftForPOS(shop.id, customer.id);
+  const savedD2 = salesService.saveDraftFromPOS(d2.id, {
+    customerId: customer.id,
+    invoiceDate: '2026-08-19',
+    dueDate: null,
+    invoiceDiscountType: 'NONE',
+    invoiceDiscountValue: 0,
+    notes: 'Test INHERIT ALLOW',
+    lines: [{
+      productId: productInherit.id,
+      quantity: 1,
+      provisionalUnitPrice: 10.00,
+      provisionalDiscountType: 'NONE',
+      provisionalDiscountValue: 0
+    }]
+  });
+  const posted2 = salesService.postSale(d2.id, [{ paymentMode: 'CASH', amount: savedD2.cart.grandTotal }], savedD2.version);
+  assert(posted2.invoice.paymentStatus === 'PAID', 'Sale posted successfully under Shop ON + Product INHERIT');
+  
+  const stockInherit2 = getDatabaseConnection().prepare(`
+    SELECT COALESCE(SUM(quantity), 0) AS q FROM InventoryTransaction WHERE productId = ?
+  `).get(productInherit.id) as { q: number };
+  assert(stockInherit2.q === -1, 'Stock went negative to -1');
+
+  // Under Shop ON + Product BLOCK, posting must fail
+  const productBlock = await productService.createProduct({
+    product: {
+      productCode: 'NEG-BLK',
+      name: 'Negative Block Product',
+      primaryUnitId: product1.primaryUnitId,
+      taxRateId: product1.taxRateId,
+      productType: 'GOODS',
+      trackInventory: true,
+      allowNegativeStock: false,
+      negativeStockPolicy: 'BLOCK'
+    },
+    barcodes: [],
+    defaultPrice: { purchasePrice: 5.00, sellingPrice: 10.00, mrp: 15.00 },
+    openingBalance: null
+  });
+  
+  try {
+    const d3 = salesService.createDraftForPOS(shop.id, customer.id);
+    const savedD3 = salesService.saveDraftFromPOS(d3.id, {
+      customerId: customer.id,
+      invoiceDate: '2026-08-19',
+      dueDate: null,
+      invoiceDiscountType: 'NONE',
+      invoiceDiscountValue: 0,
+      notes: 'Test BLOCK override',
+      lines: [{
+        productId: productBlock.id,
+        quantity: 1,
+        provisionalUnitPrice: 10.00,
+        provisionalDiscountType: 'NONE',
+        provisionalDiscountValue: 0
+      }]
+    });
+    salesService.postSale(d3.id, [{ paymentMode: 'CASH', amount: savedD3.cart.grandTotal }], savedD3.version);
+    assert(false, 'Should fail under Shop ON + Product BLOCK');
+  } catch (err: any) {
+    assert(err.message === 'INSUFFICIENT_STOCK', 'Blocks negative sale under Shop ON + Product BLOCK');
+  }
+
+  // Under Shop OFF + Product ALLOW, posting must succeed
+  shopRepo.updateShop({ allowNegativeStockGlobally: false });
+  const productAllow = await productService.createProduct({
+    product: {
+      productCode: 'NEG-ALL',
+      name: 'Negative Allow Product',
+      primaryUnitId: product1.primaryUnitId,
+      taxRateId: product1.taxRateId,
+      productType: 'GOODS',
+      trackInventory: true,
+      allowNegativeStock: true,
+      negativeStockPolicy: 'ALLOW'
+    },
+    barcodes: [],
+    defaultPrice: { purchasePrice: 5.00, sellingPrice: 10.00, mrp: 15.00 },
+    openingBalance: null
+  });
+
+  const d4 = salesService.createDraftForPOS(shop.id, customer.id);
+  const savedD4 = salesService.saveDraftFromPOS(d4.id, {
+    customerId: customer.id,
+    invoiceDate: '2026-08-19',
+    dueDate: null,
+    invoiceDiscountType: 'NONE',
+    invoiceDiscountValue: 0,
+    notes: 'Test ALLOW override',
+    lines: [{
+      productId: productAllow.id,
+      quantity: 2,
+      provisionalUnitPrice: 10.00,
+      provisionalDiscountType: 'NONE',
+      provisionalDiscountValue: 0
+    }]
+  });
+  const posted4 = salesService.postSale(d4.id, [{ paymentMode: 'CASH', amount: savedD4.cart.grandTotal }], savedD4.version);
+  assert(posted4.invoice.paymentStatus === 'PAID', 'Sale posted successfully under Shop OFF + Product ALLOW');
+  
+  const stockAllow = getDatabaseConnection().prepare(`
+    SELECT COALESCE(SUM(quantity), 0) AS q FROM InventoryTransaction WHERE productId = ?
+  `).get(productAllow.id) as { q: number };
+  assert(stockAllow.q === -2, 'Stock went negative to -2');
+
+  // Test 15: Empty Draft Startup Cleanup
+  console.log('\nTesting empty draft startup database cleanup...');
+  
+  // Insert a mock empty draft
+  const emptyDraftId = crypto.randomUUID();
+  db.prepare(`
+    INSERT INTO SalesInvoice (id, shopId, customerId, invoiceNumber, draftReference, invoiceDate, status, grandTotal, paidAmount, outstandingAmount, createdAt, updatedAt, version)
+    VALUES (?, ?, ?, 'MOCK-EMPTY-1', 'DFT-MOCK-EMPTY-1', '2026-08-19', 'DRAFT', 0, 0, 0, '2026-08-19', '2026-08-19', 1)
+  `).run(emptyDraftId, shop.id, customer.id);
+  
+  // Verify it exists
+  const checkEmpty = db.prepare("SELECT COUNT(*) as c FROM SalesInvoice WHERE id = ?").get(emptyDraftId) as { c: number };
+  assert(checkEmpty.c === 1, 'Empty draft created in DB');
+
+  // Run startup maintenance query
+  const cleanResult = db.prepare(`
+    DELETE FROM SalesInvoice
+    WHERE status = 'DRAFT'
+      AND grandTotal = 0
+      AND paidAmount = 0
+      AND id NOT IN (SELECT DISTINCT salesInvoiceId FROM SalesInvoiceLine WHERE salesInvoiceId IS NOT NULL)
+      AND id NOT IN (SELECT DISTINCT salesInvoiceId FROM SalesPayment WHERE salesInvoiceId IS NOT NULL)
+      AND id NOT IN (SELECT DISTINCT referenceId FROM CustomerLedgerEntry WHERE referenceId IS NOT NULL)
+      AND id NOT IN (SELECT DISTINCT referenceId FROM InventoryTransaction WHERE referenceId IS NOT NULL)
+  `).run();
+  
+  assert(cleanResult.changes >= 1, `Cleaned up ${cleanResult.changes} empty draft records successfully`);
+  
+  const checkEmptyPost = db.prepare("SELECT COUNT(*) as c FROM SalesInvoice WHERE id = ?").get(emptyDraftId) as { c: number };
+  assert(checkEmptyPost.c === 0, 'Empty draft safely removed by cleanup');
+
   console.log('\n==================================================');
   console.log('ALL PHASE 6.5 POSTING INTEGRATION TESTS PASSED!');
   console.log('==================================================');

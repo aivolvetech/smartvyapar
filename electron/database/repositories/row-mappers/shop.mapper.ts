@@ -11,6 +11,7 @@ export function mapRowToShop(row: any): Shop {
     address: row.address || null,
     gstNumber: row.gstNumber || null,
     merchantUpiId: row.merchantUpiId || null,
+    allowNegativeStockGlobally: Boolean(row.allowNegativeStockGlobally),
     createdAt: typeof row.createdAt === 'number'
       ? new Date(row.createdAt).toISOString()
       : new Date(row.createdAt).toISOString(),

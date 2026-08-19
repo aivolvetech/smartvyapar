@@ -10,6 +10,7 @@ import { PricingService } from './pricing.service';
 import { OpeningBalanceService } from './opening-balance.service';
 import { InventoryService } from './inventory.service';
 import { ShopRepository } from '../database/repositories/shop.repository';
+import { resolveEffectiveNegativeStock } from './stock-policy';
 import {
   CreateProductRequest, UpdateProductRequest,
   ProductData, ProductListFilter, ProductListResult,
@@ -48,6 +49,8 @@ export class ProductService {
     }));
 
     const prices = this._pricingService.resolveDefaultPrice(product.id);
+    const shop = this._shopRepo.getShop() || { allowNegativeStockGlobally: false };
+    const effectiveNeg = resolveEffectiveNegativeStock(product, shop);
 
     return {
       id: product.id,
@@ -68,7 +71,8 @@ export class ProductService {
       taxRate: null,
       productType: product.productType,
       trackInventory: product.trackInventory,
-      allowNegativeStock: product.allowNegativeStock,
+      allowNegativeStock: effectiveNeg,
+      negativeStockPolicy: product.negativeStockPolicy,
       minimumStockLevel: product.minimumStockLevel,
       reorderLevel: product.reorderLevel,
       maximumStockLevel: product.maximumStockLevel,
@@ -197,6 +201,7 @@ export class ProductService {
         name: prodInput.name.trim(),
         trackInventory: productType === 'SERVICE' ? false : (prodInput.trackInventory !== false),
         allowNegativeStock: productType === 'SERVICE' ? false : (prodInput.allowNegativeStock ?? false),
+        negativeStockPolicy: productType === 'SERVICE' ? 'BLOCK' : (prodInput.negativeStockPolicy || 'INHERIT'),
         productType,
       });
 
@@ -300,6 +305,7 @@ export class ProductService {
         ...prodInput,
         trackInventory,
         allowNegativeStock,
+        negativeStockPolicy: productType === 'SERVICE' ? 'BLOCK' : (prodInput.negativeStockPolicy || 'INHERIT'),
       });
 
       // 2. Update barcodes (replace strategy — delete active ones, create new)

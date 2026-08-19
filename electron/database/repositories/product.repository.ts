@@ -248,13 +248,13 @@ export class ProductRepository {
           id, productCode, normalizedProductCode, name, normalizedName,
           printName, description, categoryId, brandId, primaryUnitId,
           hsnSacCode, taxRateId, productType, trackInventory, allowNegativeStock,
-          minimumStockLevel, reorderLevel, maximumStockLevel,
+          negativeStockPolicy, minimumStockLevel, reorderLevel, maximumStockLevel,
           sku, normalizedSku, isActive, version, createdAt, updatedAt
         ) VALUES (
           ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
           ?, ?, ?, ?, ?,
-          ?, ?, ?,
+          ?, ?, ?, ?,
           ?, ?, 1, 1, ?, ?
         )
       `).run(
@@ -265,6 +265,7 @@ export class ProductRepository {
         input.productType || 'GOODS',
         input.trackInventory !== false ? 1 : 0,
         input.allowNegativeStock ? 1 : 0,
+        input.negativeStockPolicy || 'INHERIT',
         input.minimumStockLevel ?? null,
         input.reorderLevel ?? null,
         input.maximumStockLevel ?? null,
@@ -295,6 +296,7 @@ export class ProductRepository {
       const productType   = input.productType   !== undefined ? input.productType   : existing.productType;
       const trackInventory     = input.trackInventory     !== undefined ? input.trackInventory     : existing.trackInventory;
       const allowNegativeStock = input.allowNegativeStock !== undefined ? input.allowNegativeStock : existing.allowNegativeStock;
+      const negativeStockPolicy = input.negativeStockPolicy !== undefined ? input.negativeStockPolicy : existing.negativeStockPolicy;
       const minimumStockLevel  = input.minimumStockLevel  !== undefined ? input.minimumStockLevel  : existing.minimumStockLevel;
       const reorderLevel       = input.reorderLevel       !== undefined ? input.reorderLevel       : existing.reorderLevel;
       const maximumStockLevel  = input.maximumStockLevel  !== undefined ? input.maximumStockLevel  : existing.maximumStockLevel;
@@ -306,7 +308,7 @@ export class ProductRepository {
           productCode=?, normalizedProductCode=?, name=?, normalizedName=?,
           printName=?, description=?, categoryId=?, brandId=?, primaryUnitId=?,
           hsnSacCode=?, taxRateId=?, productType=?, trackInventory=?, allowNegativeStock=?,
-          minimumStockLevel=?, reorderLevel=?, maximumStockLevel=?,
+          negativeStockPolicy=?, minimumStockLevel=?, reorderLevel=?, maximumStockLevel=?,
           sku=?, normalizedSku=?, isActive=?, version=version+1, updatedAt=?
         WHERE id=?
       `).run(
@@ -315,6 +317,7 @@ export class ProductRepository {
         categoryId || null, brandId || null, primaryUnitId,
         hsnSacCode || null, taxRateId || null,
         productType, trackInventory ? 1 : 0, allowNegativeStock ? 1 : 0,
+        negativeStockPolicy || 'INHERIT',
         minimumStockLevel ?? null, reorderLevel ?? null, maximumStockLevel ?? null,
         sku || null, normSku, isActive ? 1 : 0,
         now, id

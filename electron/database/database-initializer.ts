@@ -73,6 +73,23 @@ export async function initializeDatabase(): Promise<boolean> {
     // 5. Run programmatic migrations
     await runMigrations(db);
 
+    // 5.5 Clean up empty drafts from SQLite database
+    try {
+      const cleanResult = db.prepare(`
+        DELETE FROM SalesInvoice
+        WHERE status = 'DRAFT'
+          AND grandTotal = 0
+          AND paidAmount = 0
+          AND id NOT IN (SELECT DISTINCT salesInvoiceId FROM SalesInvoiceLine WHERE salesInvoiceId IS NOT NULL)
+          AND id NOT IN (SELECT DISTINCT salesInvoiceId FROM SalesPayment WHERE salesInvoiceId IS NOT NULL)
+          AND id NOT IN (SELECT DISTINCT referenceId FROM CustomerLedgerEntry WHERE referenceId IS NOT NULL)
+          AND id NOT IN (SELECT DISTINCT referenceId FROM InventoryTransaction WHERE referenceId IS NOT NULL)
+      `).run();
+      logInfo(`Cleaned up ${cleanResult.changes} empty draft records from database.`);
+    } catch (cleanErr) {
+      logError('Failed to run empty draft cleanup', cleanErr);
+    }
+
     // 6. Run database health checks
     const isHealthy = checkDatabaseIntegrity(db);
     if (!isHealthy) {
