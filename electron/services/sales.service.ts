@@ -558,13 +558,16 @@ export class SalesService {
         c.name AS customerName,
         c.phone AS customerPhone,
         si.heldAt,
+        si.createdAt,
+        si.status,
         si.grandTotal AS provisionalTotal,
         si.notes,
-        (SELECT COUNT(*) FROM SalesInvoiceLine WHERE salesInvoiceId = si.id) AS lineCount
+        (SELECT COUNT(*) FROM SalesInvoiceLine WHERE salesInvoiceId = si.id) AS lineCount,
+        (SELECT COALESCE(SUM(quantity), 0) FROM SalesInvoiceLine WHERE salesInvoiceId = si.id) AS totalQty
       FROM SalesInvoice si
       JOIN Customer c ON c.id = si.customerId
-      WHERE si.shopId = ? AND si.status = 'HELD'
-      ORDER BY si.heldAt DESC
+      WHERE si.shopId = ? AND (si.status = 'HELD' OR si.status = 'DRAFT')
+      ORDER BY COALESCE(si.heldAt, si.createdAt) DESC
     `).all(shopId) as any[];
 
     return rows.map(r => ({
@@ -573,8 +576,11 @@ export class SalesService {
       customerId: r.customerId,
       customerName: r.customerName,
       customerPhone: r.customerPhone,
-      heldAt: r.heldAt || new Date().toISOString(),
+      heldAt: r.heldAt || r.createdAt || new Date().toISOString(),
+      createdAt: r.createdAt,
+      status: r.status,
       lineCount: r.lineCount ?? 0,
+      totalQty: r.totalQty ?? 0,
       provisionalTotal: r.provisionalTotal ?? 0,
       notes: r.notes || null
     }));

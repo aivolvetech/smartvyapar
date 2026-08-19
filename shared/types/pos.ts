@@ -171,7 +171,10 @@ export interface POSHeldBillListItem {
   customerName: string;
   customerPhone: string | null;
   heldAt: string;
+  createdAt?: string;
+  status?: 'DRAFT' | 'HELD';
   lineCount: number;
+  totalQty?: number;
   provisionalTotal: number;
   notes: string | null;
 }

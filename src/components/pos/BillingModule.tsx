@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import UPIQRCode from './UPIQRCode';
 
 interface Props {
@@ -13,6 +13,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   const [customers, setCustomers] = useState<any[]>([]);
   const [selectedCustomerId, setSelectedCustomerId] = useState('');
   
+  // Input references for focus targeting
+  const barcodeInputRef = useRef<HTMLInputElement>(null);
+  const customerSelectRef = useRef<HTMLSelectElement>(null);
+
   // Search & Barcode
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -27,6 +31,9 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   const [cardAmount, setCardAmount] = useState<number>(0);
   const [upiAmount, setUpiAmount] = useState<number>(0);
   const [creditAmount, setCreditAmount] = useState<number>(0);
+
+  // Cash Tender Helper
+  const [cashTendered, setCashTendered] = useState<number>(0);
   
   // UPI QR states
   const [upiConfirmed, setUpiConfirmed] = useState(false);
@@ -42,11 +49,43 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   const [custError, setCustError] = useState('');
   const [custSaving, setCustSaving] = useState(false);
 
+  // Pending Bills Modal State
+  const [pendingModalOpen, setPendingModalOpen] = useState(false);
+  const [pendingTab, setPendingTab] = useState<'DRAFT' | 'HELD'>('DRAFT');
+  const [pendingBills, setPendingBills] = useState<any[]>([]);
+
   // General States
   const [loading, setLoading] = useState(false);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
   const [successInvoice, setSuccessInvoice] = useState<any>(null);
+
+  // Friendly error mapper
+  const getFriendlyError = (errStr: string): string => {
+    if (!errStr) return '';
+    if (errStr.includes('INSUFFICIENT_STOCK')) {
+      return 'Insufficient stock for one or more goods in the cart. Please adjust quantity or stock.';
+    }
+    if (errStr.includes('PRODUCT_NOT_FOUND')) {
+      return 'Product not found for scanned barcode.';
+    }
+    if (errStr.includes('UPI_NOT_CONFIGURED')) {
+      return 'UPI is not configured. Add Merchant UPI ID in Shop Settings.';
+    }
+    if (errStr.includes('INVALID_PAYMENT_ALLOCATION')) {
+      return 'Invalid payment allocation. Total payments must match Grand Total.';
+    }
+    if (errStr.includes('CREDIT_CUSTOMER_REQUIRED')) {
+      return 'Walk-In Customer is blocked from using credit terms.';
+    }
+    if (errStr.includes('STALE_INVOICE_VERSION')) {
+      return 'Stale bill version. The cart has been modified elsewhere. Please reload.';
+    }
+    if (errStr.includes('SALE_ALREADY_POSTED')) {
+      return 'This sale has already been posted successfully.';
+    }
+    return errStr;
+  };
 
   // Initialize draft and settings
   const initializePOS = async () => {
@@ -54,6 +93,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     setError('');
     setSuccessInvoice(null);
     setPaymentModalOpen(false);
+    setPendingModalOpen(false);
     resetPayments();
     
     try {
@@ -66,9 +106,11 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
       // 2. Load Customers
       await loadCustomers();
     } catch (err: any) {
-      setError(err.message || 'Error initializing POS.');
+      setError(getFriendlyError(err.message) || 'Error initializing POS.');
     } finally {
       setLoading(false);
+      // Auto focus barcode input
+      setTimeout(() => barcodeInputRef.current?.focus(), 150);
     }
   };
 
@@ -111,7 +153,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         setCheckoutToken(Date.now().toString());
         if (initialInvoiceId) onInitialInvoiceLoaded?.();
       } else {
-        setError(draftRes.error || 'Failed to initialize POS draft.');
+        setError(getFriendlyError(draftRes.error) || 'Failed to initialize POS draft.');
       }
     }
   };
@@ -121,6 +163,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     setCardAmount(0);
     setUpiAmount(0);
     setCreditAmount(0);
+    setCashTendered(0);
     setUpiConfirmed(false);
   };
 
@@ -137,6 +180,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
       setUpiConfirmed(false);
       if (paymentMode === 'CASH') {
         setCashAmount(grandTotal);
+        setCashTendered(grandTotal);
       } else if (paymentMode === 'UPI') {
         setUpiAmount(grandTotal);
       } else if (paymentMode === 'CARD') {
@@ -146,6 +190,61 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
       }
     }
   }, [paymentModalOpen, paymentMode, grandTotal]);
+
+  // Keyboard Shortcuts handling
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // ESC closes any active modal
+      if (e.key === 'Escape') {
+        if (paymentModalOpen) {
+          setPaymentModalOpen(false);
+          e.preventDefault();
+        } else if (quickCustModalOpen) {
+          setQuickCustModalOpen(false);
+          e.preventDefault();
+        } else if (pendingModalOpen) {
+          setPendingModalOpen(false);
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // F2 -> Focus barcode scanner/product lookup
+      if (e.key === 'F2') {
+        e.preventDefault();
+        barcodeInputRef.current?.focus();
+        return;
+      }
+
+      // F4 -> Focus customer selection dropdown
+      if (e.key === 'F4') {
+        e.preventDefault();
+        customerSelectRef.current?.focus();
+        return;
+      }
+
+      // F6 -> Hold Bill
+      if (e.key === 'F6') {
+        e.preventDefault();
+        if (draft?.cart?.lines?.length > 0) {
+          handleHoldBill();
+        }
+        return;
+      }
+
+      // F8 -> Proceed to Checkout
+      if (e.key === 'F8') {
+        e.preventDefault();
+        if (draft?.cart?.lines?.length > 0 && !hasStockValidationError && !isCheckoutDisabled) {
+          setPaymentModalOpen(true);
+        }
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [draft, paymentModalOpen, quickCustModalOpen, pendingModalOpen, grandTotal]);
 
   // When customer changes, reprice the draft cart
   const handleCustomerChange = async (custId: string) => {
@@ -167,10 +266,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
           setCheckoutToken(Date.now().toString());
         }
       } else {
-        setError(res.error || 'Failed to reprice cart for customer.');
+        setError(getFriendlyError(res.error) || 'Failed to reprice cart for customer.');
       }
     } catch (err: any) {
-      setError(err.message || 'Error updating customer.');
+      setError(getFriendlyError(err.message) || 'Error updating customer.');
     }
   };
 
@@ -198,28 +297,46 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   // Handle barcode scanning
   const handleBarcodeSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!barcodeInput.trim() || !draft) return;
+    const val = barcodeInput.trim();
+    if (!val || !draft) return;
     setError('');
     try {
       const res = await (window as any).smartVyapar.resolvePOSProductByBarcode({
         shopId,
-        barcode: barcodeInput.trim(),
+        barcode: val,
         customerId: selectedCustomerId,
         draftDate: draft.invoiceDate
       });
       if (res.success && res.data) {
-        // Add product to draft
-        await handleAddProduct(res.data.productId, res.data.sellingPrice);
-        setBarcodeInput('');
+        // Add product to draft. The backend automatically increments quantity if already exists.
+        const addRes = await (window as any).smartVyapar.addPOSDraftLine(draft.id, {
+          productId: res.data.productId,
+          quantity: 1,
+          provisionalUnitPrice: res.data.sellingPrice,
+          provisionalDiscountType: 'NONE',
+          provisionalDiscountValue: 0
+        });
+        if (addRes.success) {
+          setDraft(addRes.data);
+          setCheckoutToken(Date.now().toString());
+          setBarcodeInput('');
+          // Maintain focus
+          barcodeInputRef.current?.focus();
+        } else {
+          setError(getFriendlyError(addRes.error) || 'Failed to add product.');
+        }
       } else {
-        setError(res.error || 'Barcode could not be resolved.');
+        const friendly = res.error === 'PRODUCT_NOT_FOUND' 
+          ? 'Product not found for scanned barcode.' 
+          : (getFriendlyError(res.error) || 'Barcode could not be resolved.');
+        setError(friendly);
       }
     } catch (err: any) {
-      setError(err.message || 'Barcode resolution failed.');
+      setError(getFriendlyError(err.message) || 'Barcode resolution failed.');
     }
   };
 
-  // Add Product to Cart
+  // Add Product to Cart from Search Results
   const handleAddProduct = async (productId: string, price: number) => {
     if (!draft) return;
     setError('');
@@ -237,11 +354,12 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         setCheckoutToken(Date.now().toString());
         setSearchQuery('');
         setSearchResults([]);
+        barcodeInputRef.current?.focus();
       } else {
-        setError(res.error || 'Failed to add product.');
+        setError(getFriendlyError(res.error) || 'Failed to add product.');
       }
     } catch (err: any) {
-      setError(err.message || 'Error adding product.');
+      setError(getFriendlyError(err.message) || 'Error adding product.');
     }
   };
 
@@ -261,10 +379,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         setDraft(res.data);
         setCheckoutToken(Date.now().toString());
       } else {
-        setError(res.error || 'Failed to update item details.');
+        setError(getFriendlyError(res.error) || 'Failed to update item details.');
       }
     } catch (err: any) {
-      setError(err.message || 'Error updating line.');
+      setError(getFriendlyError(err.message) || 'Error updating line.');
     }
   };
 
@@ -279,10 +397,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         setDraft(res.data);
         setCheckoutToken(Date.now().toString());
       } else {
-        setError(res.error || 'Failed to remove product.');
+        setError(getFriendlyError(res.error) || 'Failed to remove product.');
       }
     } catch (err: any) {
-      setError(err.message || 'Error removing line.');
+      setError(getFriendlyError(err.message) || 'Error removing line.');
     }
   };
 
@@ -321,12 +439,178 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
         setCustAddress('');
         await loadCustomers(newCust.id);
       } else {
-        setCustError(res.error || 'Failed to create customer.');
+        setCustError(getFriendlyError(res.error) || 'Failed to create customer.');
       }
     } catch (err: any) {
-      setCustError(err.message || 'Error creating customer.');
+      setCustError(getFriendlyError(err.message) || 'Error creating customer.');
     } finally {
       setCustSaving(false);
+    }
+  };
+
+  // Save draft cart state
+  const handleSaveDraft = async () => {
+    if (!draft) return;
+    setError('');
+    try {
+      const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
+        customerId: selectedCustomerId,
+        invoiceDate: draft.invoiceDate,
+        dueDate: draft.dueDate,
+        invoiceDiscountType: draft.cart.invoiceDiscountType,
+        invoiceDiscountValue: draft.cart.invoiceDiscountValue,
+        notes: draft.notes,
+        lines: draft.cart.lines.map((l: any) => ({
+          productId: l.productId,
+          quantity: l.quantity,
+          provisionalUnitPrice: l.unitPrice,
+          provisionalDiscountType: l.discountType,
+          provisionalDiscountValue: l.discountValue
+        }))
+      });
+      if (saveRes.success) {
+        const savedRef = draft.draftReference;
+        await initializePOS();
+        alert(`Draft saved successfully! Reference: ${savedRef}`);
+      } else {
+        setError(getFriendlyError(saveRes.error) || 'Failed to save draft.');
+      }
+    } catch (err: any) {
+      setError(getFriendlyError(err.message) || 'Error saving draft.');
+    }
+  };
+
+  // Hold current bill
+  const handleHoldBill = async () => {
+    if (!draft) return;
+    if (draft.cart.lines.length === 0) {
+      setError('Cannot hold an empty cart.');
+      return;
+    }
+    setError('');
+    try {
+      // 1. Save draft payload first
+      const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
+        customerId: selectedCustomerId,
+        invoiceDate: draft.invoiceDate,
+        dueDate: draft.dueDate,
+        invoiceDiscountType: draft.cart.invoiceDiscountType,
+        invoiceDiscountValue: draft.cart.invoiceDiscountValue,
+        notes: draft.notes,
+        lines: draft.cart.lines.map((l: any) => ({
+          productId: l.productId,
+          quantity: l.quantity,
+          provisionalUnitPrice: l.unitPrice,
+          provisionalDiscountType: l.discountType,
+          provisionalDiscountValue: l.discountValue
+        }))
+      });
+      if (saveRes.success) {
+        // 2. Mark draft as HELD
+        const holdRes = await (window as any).smartVyapar.holdPOSDraft(draft.id, shopId);
+        if (holdRes.success) {
+          const heldRef = draft.draftReference;
+          await initializePOS();
+          alert(`Bill held successfully! Reference: ${heldRef}`);
+        } else {
+          setError(getFriendlyError(holdRes.error) || 'Failed to hold bill.');
+        }
+      } else {
+        setError(getFriendlyError(saveRes.error) || 'Failed to save draft before holding.');
+      }
+    } catch (err: any) {
+      setError(getFriendlyError(err.message) || 'Error holding bill.');
+    }
+  };
+
+  // Clear cart items safely
+  const handleClearCart = async () => {
+    if (!draft) return;
+    if (draft.cart.lines.length === 0) return;
+    if (window.confirm('Are you sure you want to clear all items in the current cart?')) {
+      setError('');
+      try {
+        const saveRes = await (window as any).smartVyapar.savePOSDraft(draft.id, {
+          customerId: selectedCustomerId,
+          invoiceDate: draft.invoiceDate,
+          dueDate: draft.dueDate,
+          invoiceDiscountType: 'NONE',
+          invoiceDiscountValue: 0,
+          notes: draft.notes,
+          lines: []
+        });
+        if (saveRes.success) {
+          setDraft(saveRes.data);
+          setCheckoutToken(Date.now().toString());
+        } else {
+          setError(getFriendlyError(saveRes.error) || 'Failed to clear cart items.');
+        }
+      } catch (err: any) {
+        setError(getFriendlyError(err.message) || 'Error clearing cart.');
+      }
+    }
+  };
+
+  // Delete draft safely
+  const handleDeleteDraft = async (id: string, refName: string) => {
+    if (window.confirm(`Are you sure you want to permanently delete this draft (${refName})? This action cannot be undone.`)) {
+      setError('');
+      try {
+        const res = await (window as any).smartVyapar.deletePOSDraft(id, shopId);
+        if (res.success) {
+          if (draft && draft.id === id) {
+            await initializePOS();
+          } else if (pendingModalOpen) {
+            await loadPendingBills();
+          }
+          alert(`Draft ${refName} deleted.`);
+        } else {
+          setError(getFriendlyError(res.error) || 'Failed to delete draft.');
+        }
+      } catch (err: any) {
+        setError(getFriendlyError(err.message) || 'Error deleting draft.');
+      }
+    }
+  };
+
+  // Open Pending Bills Panel
+  const handleOpenPendingBills = async () => {
+    setError('');
+    await loadPendingBills();
+    setPendingModalOpen(true);
+  };
+
+  const loadPendingBills = async () => {
+    const res = await (window as any).smartVyapar.listHeldPOSBills(shopId);
+    if (res.success) {
+      setPendingBills(res.data || []);
+    }
+  };
+
+  // Resume Pending Bill
+  const handleResumeBill = async (billId: string, status: string) => {
+    setError('');
+    try {
+      let res;
+      if (status === 'HELD') {
+        res = await (window as any).smartVyapar.resumePOSDraft(billId, shopId);
+      } else {
+        res = await (window as any).smartVyapar.getPOSDraft(billId, shopId);
+      }
+
+      if (res.success && res.data) {
+        setDraft(res.data);
+        setSelectedCustomerId(res.data.customerId);
+        setCheckoutToken(Date.now().toString());
+        setPendingModalOpen(false);
+        resetPayments();
+        // Focus scanner
+        setTimeout(() => barcodeInputRef.current?.focus(), 100);
+      } else {
+        setError(getFriendlyError(res.error) || 'Failed to resume bill.');
+      }
+    } catch (err: any) {
+      setError(getFriendlyError(err.message) || 'Error resuming bill.');
     }
   };
 
@@ -355,6 +639,33 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
     currentCustomer?.customerCode === 'WALK-IN' ||
     currentCustomer?.customerCode === 'WALKIN'
   );
+
+  // Validation Checks for Proceed to Checkout
+  const isCartEmpty = totalItemsCount === 0;
+  const hasInvalidQuantity = draft?.cart?.lines?.some((line: any) => line.quantity <= 0 || !Number.isFinite(line.quantity));
+  const hasInvalidDiscount = draft?.cart?.lines?.some((line: any) => {
+    if (line.discountType === 'PERCENT') {
+      return line.discountValue < 0 || line.discountValue > 100;
+    }
+    if (line.discountType === 'AMOUNT') {
+      return line.discountValue < 0 || line.discountValue > (line.unitPrice * line.quantity);
+    }
+    return false;
+  });
+
+  const isCheckoutDisabled = isCartEmpty || hasStockValidationError || hasInvalidQuantity || hasInvalidDiscount;
+
+  // Resolve human-readable checkout disabled reason
+  const getCheckoutBlockReason = (): string => {
+    if (isCartEmpty) return 'Cart is empty.';
+    if (hasStockValidationError) {
+      const blockedItem = draft?.cart?.lines?.find((line: any) => line.productTypeSnapshot === 'GOODS' && line.quantity > line.advisoryStock);
+      return `Insufficient stock for ${blockedItem?.productNameSnapshot}. Requested: ${blockedItem?.quantity} | Available: ${blockedItem?.advisoryStock}`;
+    }
+    if (hasInvalidQuantity) return 'Enter a valid quantity.';
+    if (hasInvalidDiscount) return 'Fix invalid discount before checkout.';
+    return '';
+  };
 
   // Generate UPI URI using dynamic upiAmount
   const generateUpiUri = () => {
@@ -396,10 +707,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
       if (res.success) {
         setSuccessInvoice(res.data.invoice);
       } else {
-        setError(res.error || 'Transaction failed.');
+        setError(getFriendlyError(res.error) || 'Transaction failed.');
       }
     } catch (err: any) {
-      setError(err.message || 'Error posting sale.');
+      setError(getFriendlyError(err.message) || 'Error posting sale.');
     } finally {
       setPosting(false);
     }
@@ -434,18 +745,20 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
   }
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '1rem', height: 'calc(100vh - 120px)' }}>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 360px', gap: '1rem', height: 'calc(100vh - 120px)' }}>
       {/* Catalog & Cart Panel */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto', paddingRight: '0.25rem' }}>
         
-        {/* Customer Select, Compact Creation & Barcode scan */}
+        {/* Customer Select, Compact Creation, Barcode scan, and Pending action */}
         <div className="card-surface" style={{ display: 'flex', gap: '1rem', alignItems: 'center', justifyContent: 'space-between', padding: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Customer:</span>
             <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
               <select
+                ref={customerSelectRef}
+                id="customer-select"
                 className="form-input"
-                style={{ width: '220px', height: '36px', padding: '0 0.5rem', borderRadius: 'var(--radius-sm)' }}
+                style={{ width: '180px', height: '36px', padding: '0 0.5rem', borderRadius: 'var(--radius-sm)' }}
                 value={selectedCustomerId}
                 onChange={e => handleCustomerChange(e.target.value)}
               >
@@ -458,7 +771,8 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
               <button
                 type="button"
                 className="app-btn"
-                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', height: '36px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, padding: '0 0.75rem', borderRadius: 'var(--radius-sm)' }}
+                title="Create Quick Customer"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', height: '36px', display: 'flex', alignItems: 'center', gap: '4px', fontWeight: 600, padding: '0 0.5rem', borderRadius: 'var(--radius-sm)' }}
                 onClick={() => {
                   setCustError('');
                   setQuickCustModalOpen(true);
@@ -472,14 +786,25 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
           <form onSubmit={handleBarcodeSubmit} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 500 }}>Barcode Scan:</span>
             <input
+              ref={barcodeInputRef}
+              id="barcode-input"
               type="text"
               className="form-input"
-              placeholder="Scan barcode and press Enter"
-              style={{ width: '220px', height: '36px', borderRadius: 'var(--radius-sm)' }}
+              placeholder="Scan barcode/SKU (F2)"
+              style={{ width: '180px', height: '36px', borderRadius: 'var(--radius-sm)' }}
               value={barcodeInput}
               onChange={e => setBarcodeInput(e.target.value)}
             />
           </form>
+
+          <button
+            type="button"
+            className="app-btn"
+            style={{ background: 'var(--color-info-light)', color: 'var(--color-info)', border: '1px solid var(--color-info)', height: '36px', fontWeight: 600, padding: '0 0.75rem', borderRadius: 'var(--radius-sm)' }}
+            onClick={handleOpenPendingBills}
+          >
+            📋 Pending Bills
+          </button>
         </div>
 
         {/* Product Catalog Lookup */}
@@ -515,7 +840,26 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
 
         {/* Cart items list */}
         <div className="card-surface" style={{ flexGrow: 1, padding: '1rem', display: 'flex', flexDirection: 'column', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
-          <h3 style={{ margin: '0 0 1rem 0', fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 700 }}>Cart Items ({totalItemsCount} items, {totalQuantitySum} qty)</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 700 }}>
+              Cart Items ({totalItemsCount} items, {totalQuantitySum} qty)
+            </h3>
+            {draft?.draftReference && (
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.8rem', background: 'var(--bg-app)', padding: '3px 8px', borderRadius: '4px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                  Ref: {draft.draftReference} ({draft.status})
+                </span>
+                <button
+                  type="button"
+                  className="app-btn"
+                  style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', background: 'var(--color-error-bg)', color: 'var(--color-error)', border: '1px solid var(--color-error)', borderRadius: '4px' }}
+                  onClick={() => handleDeleteDraft(draft.id, draft.draftReference)}
+                >
+                  Delete Draft
+                </button>
+              </div>
+            )}
+          </div>
           {error && <div className="inline-error" style={{ marginBottom: '1rem', background: 'var(--color-error-bg)', color: 'var(--color-error)', padding: '0.75rem', borderRadius: 'var(--radius-sm)' }}>{error}</div>}
           
           <div className="table-scroll" style={{ flexGrow: 1, overflowY: 'auto' }}>
@@ -525,8 +869,9 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                   <th>Product</th>
                   <th>Rate</th>
                   <th style={{ width: '80px' }}>Qty</th>
+                  <th>Available</th>
                   <th>GST %</th>
-                  <th style={{ width: '150px' }}>Discount</th>
+                  <th style={{ width: '130px' }}>Discount</th>
                   <th>Taxable Amt</th>
                   <th>CGST</th>
                   <th>SGST</th>
@@ -545,11 +890,6 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{line.productNameSnapshot}</span>
                           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Code: {line.productCodeSnapshot}</span>
-                          {isStockInsufficient && (
-                            <span style={{ fontSize: '0.7rem', color: 'var(--color-error)', fontWeight: 600 }}>
-                              ⚠️ Insufficient Stock! Available: {line.advisoryStock}
-                            </span>
-                          )}
                         </div>
                       </td>
                       <td style={{ color: 'var(--text-primary)' }}>Rs {line.unitPrice.toFixed(2)}</td>
@@ -564,12 +904,26 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                           step={line.allowsDecimalQuantity ? "0.001" : "1"}
                         />
                       </td>
+                      <td style={{ color: isStockInsufficient ? 'var(--color-error)' : 'var(--text-primary)', fontWeight: isStockInsufficient ? 700 : 500 }}>
+                        {isGoods ? (
+                          isStockInsufficient ? (
+                            <div style={{ fontSize: '0.8rem' }}>
+                              Available: {line.advisoryStock}<br/>
+                              Requested: {line.quantity}
+                            </div>
+                          ) : (
+                            line.advisoryStock
+                          )
+                        ) : (
+                          'N/A (Svc)'
+                        )}
+                      </td>
                       <td style={{ color: 'var(--text-secondary)' }}>{line.taxRateSnapshot}%</td>
                       <td>
                         <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center' }}>
                           <select
                             className="form-input"
-                            style={{ width: '70px', padding: '0.25rem', height: '28px' }}
+                            style={{ width: '55px', padding: '0.25rem', height: '28px', fontSize: '0.75rem' }}
                             value={line.discountType}
                             onChange={e => {
                               const newType = e.target.value;
@@ -577,7 +931,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                               if (newType === 'PERCENT') {
                                 newVal = Math.min(100, Math.max(0, line.discountValue));
                               } else if (newType === 'AMOUNT') {
-                                newVal = Math.min(line.unitPrice, Math.max(0, line.discountValue));
+                                newVal = Math.min(line.unitPrice * line.quantity, Math.max(0, line.discountValue));
                               }
                               handleLineChange(line.id, line.quantity, line.unitPrice, newType, newVal);
                             }}
@@ -591,19 +945,24 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                             <input
                               type="number"
                               className="form-input"
-                              style={{ width: '55px', padding: '0.25rem', height: '28px' }}
-                              value={line.discountValue}
+                              style={{ width: '50px', padding: '0.25rem', height: '28px', fontSize: '0.75rem' }}
+                              value={line.discountType === 'AMOUNT' ? (line.discountValue * line.quantity) : line.discountValue}
                               onChange={e => {
-                                let newVal = Number(e.target.value);
+                                let val = Number(e.target.value);
+                                let newVal = val;
                                 if (line.discountType === 'PERCENT') {
-                                  newVal = Math.min(100, Math.max(0, newVal));
+                                  newVal = Math.min(100, Math.max(0, val));
                                 } else if (line.discountType === 'AMOUNT') {
-                                  newVal = Math.min(line.unitPrice, Math.max(0, newVal));
+                                  // Validate flat amount against allowable line discount total (quantity * unitPrice)
+                                  const maxDiscount = line.unitPrice * line.quantity;
+                                  val = Math.min(maxDiscount, Math.max(0, val));
+                                  // Save in database as per-unit discount
+                                  newVal = val / line.quantity;
                                 }
                                 handleLineChange(line.id, line.quantity, line.unitPrice, line.discountType, newVal);
                               }}
                               min="0"
-                              max={line.discountType === 'PERCENT' ? "100" : line.unitPrice}
+                              max={line.discountType === 'PERCENT' ? "100" : (line.unitPrice * line.quantity)}
                               step="0.01"
                             />
                           )}
@@ -628,8 +987,8 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                 })}
                 {(!draft?.cart?.lines || draft.cart.lines.length === 0) && (
                   <tr>
-                    <td colSpan={10} style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
-                      Cart is empty. Add products or scan barcode to start.
+                    <td colSpan={11} style={{ textAlign: 'center', padding: '3rem 0', color: 'var(--text-muted)' }}>
+                      Cart is empty. Add products or scan barcode (F2) to start.
                     </td>
                   </tr>
                 )}
@@ -641,15 +1000,21 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
 
       {/* Cart Summary & Actions Sidebar */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        
+        {/* Customer outstanding card */}
+        {!isWalkIn && currentCustomer && (
+          <div className="card-surface" style={{ padding: '0.75rem 1rem', background: '#FEF3C7', border: '1px solid #F59E0B', borderRadius: 'var(--radius-sm)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#92400E' }}>CUSTOMER LEDGER SUMMARY</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: '#78350F' }}>
+              <span>Code: <strong>{currentCustomer.customerCode}</strong></span>
+              <span>Outstanding: <strong>Rs {currentCustomer.outstanding?.toFixed(2) || '0.00'}</strong></span>
+            </div>
+          </div>
+        )}
+
         <div className="card-surface" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
           <h3 style={{ margin: 0, fontSize: '1.1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.5rem', color: 'var(--text-primary)', fontWeight: 700 }}>Order Summary</h3>
           
-          <div style={{ background: 'var(--bg-app)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', marginBottom: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.25rem', border: '1px solid var(--border-color)' }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>SELECTED CUSTOMER</div>
-            <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{currentCustomer?.name || 'Walk-In Customer'}</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Type: {currentCustomer?.customerType || 'WALK_IN'}</div>
-          </div>
-
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.9rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Items Count:</span><span style={{ fontWeight: 600 }}>{totalItemsCount}</span></div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}><span>Total Qty:</span><span style={{ fontWeight: 600 }}>{totalQuantitySum}</span></div>
@@ -665,21 +1030,53 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
             </div>
           </div>
 
-          {hasStockValidationError && (
+          {isCheckoutDisabled && (
             <div style={{ color: 'var(--color-error)', background: 'var(--color-error-bg)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', fontSize: '0.8rem', fontWeight: 600, border: '1px solid var(--color-error)' }}>
-              ⚠️ Insufficient stock for one or more goods in the cart. Checkout blocked.
+              ⚠️ {getCheckoutBlockReason()}
             </div>
           )}
 
-          <button
-            type="button"
-            className="app-btn btn-primary"
-            style={{ width: '100%', padding: '0.85rem', fontWeight: 700, fontSize: '1.05rem', marginTop: '0.5rem', borderRadius: 'var(--radius-sm)' }}
-            disabled={!draft?.cart?.lines || draft.cart.lines.length === 0 || hasStockValidationError}
-            onClick={() => setPaymentModalOpen(true)}
-          >
-            💳 Proceed to Checkout
-          </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '0.5rem' }}>
+            <button
+              type="button"
+              className="app-btn btn-primary"
+              style={{ width: '100%', padding: '0.85rem', fontWeight: 700, fontSize: '1.05rem', borderRadius: 'var(--radius-sm)' }}
+              disabled={isCheckoutDisabled}
+              onClick={() => setPaymentModalOpen(true)}
+            >
+              💳 Proceed to Checkout (F8)
+            </button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+              <button
+                type="button"
+                className="app-btn"
+                style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)', padding: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}
+                onClick={handleSaveDraft}
+              >
+                💾 Save Draft
+              </button>
+              <button
+                type="button"
+                className="app-btn"
+                style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)', padding: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}
+                disabled={draft?.cart?.lines?.length === 0}
+                onClick={handleHoldBill}
+              >
+                ⏳ Hold Bill (F6)
+              </button>
+            </div>
+            
+            <button
+              type="button"
+              className="app-btn"
+              style={{ background: 'var(--color-error-bg)', color: 'var(--color-error)', border: '1px solid var(--color-error)', padding: '0.5rem', fontSize: '0.8rem', fontWeight: 600 }}
+              disabled={draft?.cart?.lines?.length === 0}
+              onClick={handleClearCart}
+            >
+              🗑️ Clear Cart
+            </button>
+          </div>
         </div>
       </div>
 
@@ -738,6 +1135,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                     onChange={e => {
                       const val = Math.max(0, Number(e.target.value));
                       setCashAmount(val);
+                      if (paymentMode === 'CASH') setCashTendered(val);
                     }}
                     disabled={paymentMode !== 'MIXED'}
                     placeholder="0.00"
@@ -798,9 +1196,36 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                 </label>
               </div>
 
-              {/* UPI QR / Confirmed Area */}
+              {/* UPI QR / Confirmed Area or Cash Tender Helper */}
               <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'var(--bg-app)', borderRadius: 'var(--radius-md)', padding: '1rem', border: '1px solid var(--border-color)' }}>
-                {upiAmount > 0 ? (
+                {paymentMode === 'CASH' ? (
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '0.85rem', color: 'var(--text-secondary)', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.25rem' }}>💵 Cash Change Calculator</h4>
+                    <label className="form-group">
+                      <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-muted)' }}>Received Amount / Tendered</span>
+                      <input
+                        type="number"
+                        className="form-input"
+                        value={cashTendered === 0 ? '' : cashTendered}
+                        onChange={e => setCashTendered(Math.max(0, Number(e.target.value)))}
+                        style={{ height: '36px' }}
+                        min="0"
+                      />
+                    </label>
+                    <div style={{ marginTop: '0.5rem', padding: '0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+                        <span>Bill Payable:</span>
+                        <span>Rs {grandTotal.toFixed(2)}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-primary)', borderTop: '1px dashed var(--border-color)', paddingTop: '4px' }}>
+                        <span>Change to Return:</span>
+                        <span style={{ color: (cashTendered - grandTotal) >= 0 ? 'var(--color-success)' : 'var(--color-error)' }}>
+                          Rs {Math.max(0, cashTendered - grandTotal).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ) : upiAmount > 0 ? (
                   !shop?.merchantUpiId ? (
                     <div style={{ color: 'var(--color-error)', textAlign: 'center', fontSize: '0.85rem', fontWeight: 600, padding: '1rem' }}>
                       ⚠️ merchantUpiId is not configured in Shop Settings. UPI QR cannot be loaded.
@@ -855,6 +1280,12 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
               </div>
             )}
 
+            {paymentMode === 'CASH' && cashTendered < grandTotal && (
+              <div style={{ color: 'var(--color-error)', fontSize: '0.75rem', fontWeight: 600, background: 'var(--color-error-bg)', padding: '0.5rem', borderRadius: 'var(--radius-xs)', border: '1px solid var(--color-error)', textAlign: 'center' }}>
+                ❌ Tendered cash amount must be greater than or equal to the grand total.
+              </div>
+            )}
+
             {/* Verification Footer */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.25rem' }}>
               <div style={{ fontSize: '0.85rem' }}>
@@ -874,13 +1305,13 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                   style={{ padding: '0.5rem 1.25rem', background: 'var(--bg-surface)', border: '1px solid var(--border-color)', fontWeight: 600 }}
                   onClick={() => setPaymentModalOpen(false)}
                 >
-                  Cancel
+                  Cancel (ESC)
                 </button>
                 <button
                   type="button"
                   className="app-btn btn-primary"
                   style={{ padding: '0.5rem 1.5rem', fontWeight: 700 }}
-                  disabled={remaining !== 0 || posting || (upiAmount > 0 && !upiConfirmed) || (upiAmount > 0 && !shop?.merchantUpiId)}
+                  disabled={remaining !== 0 || posting || (upiAmount > 0 && !upiConfirmed) || (upiAmount > 0 && !shop?.merchantUpiId) || (paymentMode === 'CASH' && cashTendered < grandTotal)}
                   onClick={handlePostSale}
                 >
                   {posting ? 'Posting...' : 'Post Sale'}
@@ -987,7 +1418,7 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                   onClick={() => setQuickCustModalOpen(false)}
                   disabled={custSaving}
                 >
-                  Cancel
+                  Cancel (ESC)
                 </button>
                 <button
                   type="submit"
@@ -999,6 +1430,130 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Pending Bills Modal Panel */}
+      {pendingModalOpen && (
+        <div className="modal-backdrop" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100 }}>
+          <div className="card-surface" style={{ width: '780px', display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.75rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border-color)' }}>
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '0.75rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-primary)' }}>📋 Pending Invoices & Held Bills</h3>
+              <button
+                type="button"
+                className="app-btn"
+                style={{ background: 'transparent', border: 'none', fontSize: '1.2rem', padding: '0.25rem', color: 'var(--text-secondary)', cursor: 'pointer' }}
+                onClick={() => setPendingModalOpen(false)}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs selection */}
+            <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-color)' }}>
+              <button
+                type="button"
+                className="app-btn"
+                style={{
+                  background: pendingTab === 'DRAFT' ? 'var(--color-primary-light)' : 'transparent',
+                  color: pendingTab === 'DRAFT' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  borderBottom: pendingTab === 'DRAFT' ? '2px solid var(--color-primary)' : 'none',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 700,
+                  borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0'
+                }}
+                onClick={() => setPendingTab('DRAFT')}
+              >
+                Drafts ({pendingBills.filter(b => b.status === 'DRAFT').length})
+              </button>
+              <button
+                type="button"
+                className="app-btn"
+                style={{
+                  background: pendingTab === 'HELD' ? 'var(--color-primary-light)' : 'transparent',
+                  color: pendingTab === 'HELD' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                  borderBottom: pendingTab === 'HELD' ? '2px solid var(--color-primary)' : 'none',
+                  padding: '0.5rem 1rem',
+                  fontWeight: 700,
+                  borderRadius: 'var(--radius-sm) var(--radius-sm) 0 0'
+                }}
+                onClick={() => setPendingTab('HELD')}
+              >
+                Held Bills ({pendingBills.filter(b => b.status === 'HELD').length})
+              </button>
+            </div>
+
+            {/* List Table */}
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Date / Time</th>
+                    <th>Customer</th>
+                    <th>Lines</th>
+                    <th>Total Qty</th>
+                    <th style={{ textAlign: 'right' }}>Total</th>
+                    <th style={{ width: '130px', textAlign: 'center' }}>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingBills.filter(b => b.status === pendingTab).map(b => (
+                    <tr key={b.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{b.draftReference}</td>
+                      <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>
+                        {b.heldAt ? b.heldAt.slice(0, 16).replace('T', ' ') : b.createdAt?.slice(0, 16).replace('T', ' ')}
+                      </td>
+                      <td style={{ color: 'var(--text-primary)' }}>{b.customerName}</td>
+                      <td>{b.lineCount}</td>
+                      <td>{b.totalQty}</td>
+                      <td style={{ textAlign: 'right', fontWeight: 600 }}>Rs {b.provisionalTotal.toFixed(2)}</td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '0.25rem', justifyContent: 'center' }}>
+                          <button
+                            type="button"
+                            className="app-btn btn-primary"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem' }}
+                            onClick={() => handleResumeBill(b.id, b.status)}
+                          >
+                            Resume
+                          </button>
+                          <button
+                            type="button"
+                            className="app-btn"
+                            style={{ padding: '0.25rem 0.5rem', fontSize: '0.8rem', background: 'var(--color-error-bg)', color: 'var(--color-error)', border: '1px solid var(--color-error)' }}
+                            onClick={() => handleDeleteDraft(b.id, b.draftReference)}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {pendingBills.filter(b => b.status === pendingTab).length === 0 && (
+                    <tr>
+                      <td colSpan={7} style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-muted)' }}>
+                        No pending {pendingTab.toLowerCase()} bills.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', borderTop: '1px solid var(--border-color)', paddingTop: '1rem' }}>
+              <button
+                type="button"
+                className="app-btn"
+                style={{ padding: '0.5rem 1.5rem', fontWeight: 600 }}
+                onClick={() => setPendingModalOpen(false)}
+              >
+                Close (ESC)
+              </button>
+            </div>
+
           </div>
         </div>
       )}

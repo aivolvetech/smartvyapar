@@ -438,6 +438,46 @@ async function runTests() {
   assert(updatedDiscountDraft.cart.sgstTotal === 16.20, 'SGST total is 16.20');
   assert(updatedDiscountDraft.cart.grandTotal === 212, 'Grand total rounded off is 212');
 
+  // Test 13: Save Draft, Pending List, Resume, Delete Draft & Amount discount (qty > 1)
+  console.log('\nTesting Save Draft, Pending List, Resume, Delete Draft & Amount discount...');
+  const draftTest13 = salesService.createDraftForPOS(shop.id, customer.id);
+  const savedTest13 = salesService.saveDraftFromPOS(draftTest13.id, {
+    customerId: customer.id,
+    invoiceDate: '2026-08-19',
+    dueDate: null,
+    invoiceDiscountType: 'NONE',
+    invoiceDiscountValue: 0,
+    notes: 'Test 13 Draft',
+    lines: [{
+      productId: product1.id,
+      quantity: 3,
+      provisionalUnitPrice: 100.00,
+      provisionalDiscountType: 'AMOUNT',
+      provisionalDiscountValue: 50.00
+    }]
+  });
+
+  assert(savedTest13.status === 'DRAFT', 'Draft saved with status DRAFT');
+  assert(savedTest13.cart.lines[0].discountAmount === 50, 'Unit discount is 50');
+  assert(savedTest13.cart.lines[0].taxableAmount === 150, 'Line taxable amount is 150 ((100 - 50) * 3)');
+
+  const pendingInvoices = salesService.listHeldBillsForPOS(shop.id);
+  const foundDraft = pendingInvoices.find(i => i.id === draftTest13.id);
+  assert(!!foundDraft && foundDraft.status === 'DRAFT', 'Saved Draft exists in listHeldBillsForPOS output');
+  assert(foundDraft?.lineCount === 1, 'Draft has 1 line');
+  assert(foundDraft?.totalQty === 3, 'Draft totalQty is 3');
+
+  const resumedDraft = salesService.getDraftForPOS(draftTest13.id, shop.id);
+  assert(resumedDraft.status === 'DRAFT', 'Resumed draft status is DRAFT');
+  assert(resumedDraft.cart.lines.length === 1, 'Resumed draft cart has lines');
+  assert(resumedDraft.cart.lines[0].quantity === 3, 'Resumed draft lines have correct quantity');
+  assert(resumedDraft.version === savedTest13.version, 'Draft version preserved');
+
+  salesService.deleteDraft(draftTest13.id, shop.id);
+  const postDeleteInvoices = salesService.listHeldBillsForPOS(shop.id);
+  const deletedDraft = postDeleteInvoices.find(i => i.id === draftTest13.id);
+  assert(!deletedDraft, 'Draft successfully deleted from pending bills list');
+
   console.log('\n==================================================');
   console.log('ALL PHASE 6.5 POSTING INTEGRATION TESTS PASSED!');
   console.log('==================================================');

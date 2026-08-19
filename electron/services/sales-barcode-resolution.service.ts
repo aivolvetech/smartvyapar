@@ -26,7 +26,7 @@ export class SalesBarcodeResolutionService {
     `).all(normalizedBarcode) as any[];
 
     if (barcodeRows.length === 0) {
-      throw new Error(`Barcode "${normalizedBarcode}" not found or inactive.`);
+      throw new Error('PRODUCT_NOT_FOUND');
     }
 
     // 3. Detect duplicate active barcode conflicts

@@ -332,7 +332,8 @@ async function runTests() {
     barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '9999999999999', draftDate: '2026-08-04' });
     assert(false, 'Should throw for unknown barcode');
   } catch (err: any) {
-    assert(err.message.includes('not found'), 'Unknown barcode correctly rejected');
+    const msg = err.message.toLowerCase();
+    assert(msg.includes('not found') || msg.includes('not_found'), 'Unknown barcode correctly rejected');
   }
 
   // Inactive barcode
@@ -341,7 +342,8 @@ async function runTests() {
     barcodeResolutionService.resolveProductByBarcode({ shopId: shop.id, barcode: '8901234567890', draftDate: '2026-08-04' });
     assert(false, 'Should throw for inactive barcode');
   } catch (err: any) {
-    assert(err.message.includes('not found'), 'Inactive barcode correctly rejected');
+    const msg = err.message.toLowerCase();
+    assert(msg.includes('not found') || msg.includes('not_found'), 'Inactive barcode correctly rejected');
   }
   db.prepare("UPDATE ProductBarcode SET isActive = 1 WHERE id = 'bar-choc-1'").run();
 
