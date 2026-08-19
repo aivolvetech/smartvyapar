@@ -57,7 +57,7 @@ async function runTests() {
   const shop = shopRepo.createShop({
     name: 'POS Posting Test Shop',
     phone: '9888877777',
-    address: 'Viman Nagar, Pune',
+    address: 'Viman Nagar, Pune, Maharashtra',
     gstNumber: '27AAAAA1111A1Z1',
     merchantUpiId: 'shop@ybl'
   });
@@ -247,6 +247,14 @@ async function runTests() {
   assert(detail1.invoice.paymentStatus === 'PAID', 'Payment status updated to PAID');
   assert(detail1.invoice.invoiceNumber === 'INV-2026-000001', 'Official sequence drawn correctly: INV-2026-000001');
 
+  // Test 7A: Double post / idempotency check
+  try {
+    salesService.postSale(updatedDraft1.id, [{ paymentMode: 'CASH', amount: 236.00 }], updatedDraft1.version);
+    assert(false, 'Should fail to post already posted sale');
+  } catch (err: any) {
+    assert(err.message === 'SALE_ALREADY_POSTED', 'Double post verification: Fails with SALE_ALREADY_POSTED');
+  }
+
   // Verify inventory stock for Product 1 is now 8.00 (decremented by 2)
   const stockRowAfter = db.prepare('SELECT SUM(quantity) as q FROM InventoryTransaction WHERE productId = ?').get(product1.id) as { q: number };
   assert(stockRowAfter.q === 8.00, 'Inventory decremented correctly from 10 to 8');
@@ -273,6 +281,10 @@ async function runTests() {
   } catch (err: any) {
     assert(err.message === 'INSUFFICIENT_STOCK', 'Fails with INSUFFICIENT_STOCK');
   }
+
+  // Test 8A: Rollback check (verify draft remains status DRAFT)
+  const rolledBackDraft = db.prepare("SELECT status FROM SalesInvoice WHERE id = ?").get(draft2.id) as any;
+  assert(rolledBackDraft.status === 'DRAFT', 'Rollback verification: Draft status is still DRAFT');
 
   // Correct quantity to 3 (which is available)
   const lineIdToUpdate = updatedDraft2.cart.lines[0].id;
@@ -348,6 +360,83 @@ async function runTests() {
   // Verify service line did NOT log any inventory transactions
   const svcTxCount = db.prepare('SELECT COUNT(*) as c FROM InventoryTransaction WHERE productId = ?').get(product2.id) as { c: number };
   assert(svcTxCount.c === 0, 'No inventory logged for SERVICE lines');
+
+  // Test 11: Quick Customer Validations and Creation
+  console.log('\nTesting Quick Customer Creation and validations...');
+  try {
+    customerService.createCustomer({
+      name: '',
+      phone: '9888877777',
+      customerType: 'RETAIL',
+      requireUniquePhone: true
+    });
+    assert(false, 'Should fail with CUSTOMER_NAME_REQUIRED');
+  } catch (err: any) {
+    assert(err.message === 'CUSTOMER_NAME_REQUIRED', 'Fails with CUSTOMER_NAME_REQUIRED');
+  }
+
+  try {
+    customerService.createCustomer({
+      name: 'Quick Cust Test',
+      phone: '',
+      customerType: 'RETAIL',
+      requireUniquePhone: true
+    });
+    assert(false, 'Should fail with INVALID_MOBILE');
+  } catch (err: any) {
+    assert(err.message === 'INVALID_MOBILE', 'Fails with INVALID_MOBILE');
+  }
+
+  try {
+    customerService.createCustomer({
+      name: 'Quick Cust Test',
+      phone: '123', // Too short
+      customerType: 'RETAIL',
+      requireUniquePhone: true
+    });
+    assert(false, 'Should fail with INVALID_MOBILE for invalid format');
+  } catch (err: any) {
+    assert(err.message === 'INVALID_MOBILE', 'Fails with INVALID_MOBILE for invalid format');
+  }
+
+  try {
+    customerService.createCustomer({
+      name: 'Duplicate Phone Quick Cust',
+      phone: '9812345678', // Same phone as Prem Retailer
+      customerType: 'RETAIL',
+      requireUniquePhone: true
+    });
+    assert(false, 'Should fail with CUSTOMER_MOBILE_EXISTS');
+  } catch (err: any) {
+    assert(err.message === 'CUSTOMER_MOBILE_EXISTS', 'Fails with CUSTOMER_MOBILE_EXISTS');
+  }
+
+  const quickCust = customerService.createCustomer({
+    name: 'Quick Cust Success',
+    phone: '9765432100',
+    customerType: 'RETAIL',
+    requireUniquePhone: true
+  });
+  assert(!!quickCust && quickCust.name === 'Quick Cust Success', 'Quick Customer created successfully');
+
+  // Test 12: GST & Discount Calculations
+  console.log('\nTesting GST & Discount calculations...');
+  const draftDiscount = salesService.createDraftForPOS(shop.id, customer.id);
+  const updatedDiscountDraft = salesService.addDraftLine(draftDiscount.id, {
+    productId: product1.id,
+    quantity: 2,
+    provisionalUnitPrice: 100.00,
+    provisionalDiscountType: 'PERCENT',
+    provisionalDiscountValue: 10 // 10%
+  });
+  
+  const discountedLine = updatedDiscountDraft.cart.lines[0];
+  assert(discountedLine.discountAmount === 10, 'Discount amount per unit is 10');
+  assert(discountedLine.taxableAmount === 180, 'Line taxable amount is 180');
+  assert(discountedLine.lineTotal === 212.4, 'Line total is 212.4');
+  assert(updatedDiscountDraft.cart.cgstTotal === 16.20, 'CGST total is 16.20');
+  assert(updatedDiscountDraft.cart.sgstTotal === 16.20, 'SGST total is 16.20');
+  assert(updatedDiscountDraft.cart.grandTotal === 212, 'Grand total rounded off is 212');
 
   console.log('\n==================================================');
   console.log('ALL PHASE 6.5 POSTING INTEGRATION TESTS PASSED!');
