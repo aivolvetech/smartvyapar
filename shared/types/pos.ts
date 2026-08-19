@@ -152,6 +152,10 @@ export interface POSDraftViewModel {
   createdAt: string;
   updatedAt: string;
   version: number;
+  invoiceNumber?: string | null;
+  paymentStatus?: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID';
+  paidAmount?: number;
+  outstandingAmount?: number;
 }
 
 export interface POSDraftSaveInput {

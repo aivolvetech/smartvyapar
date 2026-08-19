@@ -281,13 +281,17 @@ export class SalesService {
       draftReference: invoice.draftReference,
       invoiceDate: invoice.invoiceDate,
       dueDate: invoice.dueDate,
-      status: invoice.status as 'DRAFT' | 'HELD',
+      status: invoice.status as any,
       notes: invoice.notes,
       cart,
       heldAt: invoice.heldAt,
       createdAt: invoice.createdAt,
       updatedAt: invoice.updatedAt,
-      version: invoice.version
+      version: invoice.version,
+      invoiceNumber: invoice.invoiceNumber,
+      paymentStatus: invoice.paymentStatus as any,
+      paidAmount: invoice.paidAmount,
+      outstandingAmount: invoice.outstandingAmount
     };
   }
 

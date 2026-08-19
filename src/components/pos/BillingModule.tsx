@@ -991,9 +991,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
             provisionalDiscountValue: l.discountValue
           }))
         });
-        if (!saveRes.success) {
+        if (!saveRes.success || !saveRes.data) {
           throw new Error(saveRes.error || 'Failed to persist cart items.');
         }
+        activeVersion = saveRes.data.version;
       } else {
         const saveRes = await (window as any).smartVyapar.savePOSDraft(activeId, {
           customerId: selectedCustomerId,
@@ -1010,9 +1011,10 @@ export default function BillingModule({ shopId, initialInvoiceId, onInitialInvoi
             provisionalDiscountValue: l.discountValue
           }))
         });
-        if (!saveRes.success) {
+        if (!saveRes.success || !saveRes.data) {
           throw new Error(saveRes.error || 'Failed to save cart items.');
         }
+        activeVersion = saveRes.data.version;
       }
 
       const res = await (window as any).smartVyapar.postPOSSale(
