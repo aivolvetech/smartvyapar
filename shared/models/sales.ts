@@ -120,3 +120,43 @@ export interface SalesInvoiceDetail {
   invoice: SalesInvoice;
   lines: SalesInvoiceLine[];
 }
+
+export interface SalesHistoryFilter {
+  shopId: string;
+  dateFrom?: string;
+  dateTo?: string;
+  invoiceNumber?: string;
+  customerId?: string;
+  paymentStatus?: SalesInvoice['paymentStatus'];
+  status?: SalesInvoiceStatus;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface SalesHistoryItem {
+  id: string;
+  invoiceNumber: string | null;
+  draftReference: string;
+  invoiceDate: string;
+  postedAt: string | null;
+  customerId: string;
+  customerName: string;
+  customerCode: string;
+  isWalkIn: boolean;
+  grandTotal: number;
+  paidAmount: number;
+  outstandingAmount: number;
+  paymentStatus: SalesInvoice['paymentStatus'];
+  status: SalesInvoiceStatus;
+  heldAt: string | null;
+  cancelledAt: string | null;
+  version: number;
+}
+
+export interface SalesHistoryResult {
+  items: SalesHistoryItem[];
+  totalItems: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}

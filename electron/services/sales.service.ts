@@ -18,7 +18,9 @@ import {
   SalesInvoiceLine,
   SalesInvoiceDetail,
   DraftSalesInvoiceInput,
-  DraftSalesInvoiceLineInput
+  DraftSalesInvoiceLineInput,
+  SalesHistoryFilter,
+  SalesHistoryResult
 } from '../../shared/models/sales';
 import {
   POSDraftViewModel,
@@ -231,6 +233,8 @@ export class SalesService {
         discountValue: line.discountValue,
         discountAmount: line.discountAmount,
         taxableAmount: allocatedTaxableAmount,
+        cgstAmount,
+        sgstAmount,
         lineTotal,
         priceSource,
         advisoryStock,
@@ -318,6 +322,12 @@ export class SalesService {
 
   public listDrafts(shopId: string): SalesInvoice[] {
     return this.salesInvoiceRepo.listDrafts(shopId);
+  }
+
+  public listSalesHistory(filter: SalesHistoryFilter): SalesHistoryResult {
+    const shop = this.shopRepo.getShop();
+    if (!shop || shop.id !== filter.shopId) throw new Error('SALE_NOT_FOUND');
+    return this.salesInvoiceRepo.listHistory(filter);
   }
 
   public saveDraft(id: string, input: DraftSalesInvoiceInput): SalesInvoice {

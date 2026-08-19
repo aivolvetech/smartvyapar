@@ -73,6 +73,7 @@ declare global {
       holdSalesInvoice(id: string): Promise<IPCResponse<any>>;
       resumeSalesInvoice(id: string): Promise<IPCResponse<any>>;
       deleteDraftSalesInvoice(id: string): Promise<IPCResponse<any>>;
+      getSalesHistory(filter: any): Promise<IPCResponse<any>>;
     };
   }
 }
@@ -84,6 +85,7 @@ import PurchaseModule from './components/purchases/PurchaseModule';
 import BulkImportModule from './components/import/BulkImportModule';
 import CustomerModule from './components/customers/CustomerModule';
 import BillingModule from './components/pos/BillingModule';
+import SalesHistoryModule from './components/sales/SalesHistoryModule';
 
 if (typeof window !== 'undefined' && !window.smartVyapar) {
   // Setup simple in-memory storage for the web-mode/browser mocks
@@ -614,10 +616,23 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
       return { success: true, data: c || null };
     },
     createCustomer: async (input: any) => {
+      if (input.requireUniquePhone || input.isQuick) {
+        if (!input.name || !input.name.trim()) {
+          return { success: false, error: 'CUSTOMER_NAME_REQUIRED' };
+        }
+        if (!input.phone || !input.phone.trim() || !/^[0-9+\-\s()]{6,20}$/.test(input.phone.trim())) {
+          return { success: false, error: 'INVALID_MOBILE' };
+        }
+        const clean = input.phone.trim().replace(/[^0-9]/g, '');
+        const dup = mockStorage.customers.find(item => item.phone && item.phone.trim().replace(/[^0-9]/g, '') === clean);
+        if (dup) {
+          return { success: false, error: 'CUSTOMER_MOBILE_EXISTS' };
+        }
+      }
       const c = {
         id: 'cust-' + Date.now(),
         shopId: 'mock-id-1234',
-        customerCode: input.customerCode || ('CUST-' + Date.now()),
+        customerCode: input.customerCode || ('CUST-' + String(mockStorage.customers.length + 1).padStart(6, '0')),
         name: input.name,
         phone: input.phone || null,
         email: input.email || null,
@@ -779,6 +794,20 @@ if (typeof window !== 'undefined' && !window.smartVyapar) {
       }
       return { success: false, error: 'Draft not found.' };
     },
+    getSalesHistory: async (filter: any) => {
+      let items = mockStorage.sales.filter(item => item.shopId === filter.shopId);
+      if (filter.status) items = items.filter(item => item.status === filter.status);
+      if (filter.paymentStatus) items = items.filter(item => item.paymentStatus === filter.paymentStatus);
+      if (filter.customerId) items = items.filter(item => item.customerId === filter.customerId);
+      if (filter.dateFrom) items = items.filter(item => item.invoiceDate >= filter.dateFrom);
+      if (filter.dateTo) items = items.filter(item => item.invoiceDate <= filter.dateTo);
+      if (filter.invoiceNumber) items = items.filter(item => `${item.invoiceNumber || ''} ${item.draftReference}`.toLowerCase().includes(filter.invoiceNumber.toLowerCase()));
+      const mapped = items.map(item => {
+        const customer = mockStorage.customers.find(c => c.id === item.customerId);
+        return { ...item, customerName: customer?.name || 'Unknown', customerCode: customer?.customerCode || '', isWalkIn: Boolean(customer?.isWalkIn), paidAmount: item.paidAmount || 0, outstandingAmount: item.outstandingAmount || item.grandTotal || 0, version: item.version || 1 };
+      });
+      return { success: true, data: { items: mapped, totalItems: mapped.length, page: 1, pageSize: 25, totalPages: mapped.length ? 1 : 0 } };
+    },
   } as any;
 }
 type StartupState =
@@ -793,6 +822,7 @@ type StartupState =
 type Tab =
   | 'dashboard'
   | 'billing'
+  | 'sales'
   | 'products'
   | 'inventory'
   | 'purchases'
@@ -811,6 +841,7 @@ export default function App() {
   const [inventoryDashboard, setInventoryDashboard] = useState<InventoryDashboardSummary | null>(null);
   const [purchaseDashboard, setPurchaseDashboard] = useState<PurchaseDashboardSummary | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
+  const [resumeSalesInvoiceId, setResumeSalesInvoiceId] = useState<string | null>(null);
   const [preselectedImportType, setPreselectedImportType] = useState<ImportType | null>(null);
   
   // Form Fields (Setup & Settings)
@@ -1182,6 +1213,13 @@ export default function App() {
           </button>
           <button
             type="button"
+            className={`menu-item ${activeTab === 'sales' ? 'active' : ''}`}
+            onClick={() => setActiveTab('sales')}
+          >
+            🧾 Sales History
+          </button>
+          <button
+            type="button"
             className={`menu-item ${activeTab === 'products' ? 'active' : ''}`}
             onClick={() => setActiveTab('products')}
           >
@@ -1259,14 +1297,16 @@ export default function App() {
           <div className="header-left">
             <h2 className="header-title">
               {activeTab === 'dashboard' && 'Dashboard'}
+              {activeTab === 'billing' && 'Billing / POS'}
               {activeTab === 'products' && 'Product Master'}
+              {activeTab === 'sales' && 'Sales History'}
               {activeTab === 'inventory' && 'Inventory'}
               {activeTab === 'purchases' && 'Purchases'}
               {activeTab === 'suppliers' && 'Suppliers'}
               {activeTab === 'customers' && 'Customer Master'}
               {activeTab === 'settings' && 'Shop Profile Settings'}
               {activeTab === 'import' && 'Bulk Data Import'}
-              {activeTab !== 'dashboard' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'customers' && activeTab !== 'settings' && activeTab !== 'import' && 'Coming Soon'}
+              {activeTab !== 'dashboard' && activeTab !== 'billing' && activeTab !== 'sales' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'customers' && activeTab !== 'settings' && activeTab !== 'import' && 'Coming Soon'}
             </h2>
             <span className="header-subtitle">{shop?.name}</span>
           </div>
@@ -1503,14 +1543,18 @@ export default function App() {
           )}
 
           {activeTab === 'billing' && shop && (
-            <BillingModule shopId={shop.id} />
+            <BillingModule shopId={shop.id} initialInvoiceId={resumeSalesInvoiceId} onInitialInvoiceLoaded={() => setResumeSalesInvoiceId(null)} />
+          )}
+
+          {activeTab === 'sales' && shop && (
+            <SalesHistoryModule shopId={shop.id} onResume={(invoiceId) => { setResumeSalesInvoiceId(invoiceId); setActiveTab('billing'); }} />
           )}
 
           {activeTab === 'import' && (
             <BulkImportModule preselectedType={preselectedImportType} onClearPreselect={() => setPreselectedImportType(null)} />
           )}
 
-          {activeTab !== 'dashboard' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'customers' && activeTab !== 'import' && activeTab !== 'settings' && activeTab !== 'billing' && (
+          {activeTab !== 'dashboard' && activeTab !== 'products' && activeTab !== 'inventory' && activeTab !== 'purchases' && activeTab !== 'suppliers' && activeTab !== 'customers' && activeTab !== 'import' && activeTab !== 'settings' && activeTab !== 'billing' && activeTab !== 'sales' && (
             <div className="coming-soon-container">
               <div className="coming-soon-logo">📦</div>
               <h3 style={{ fontSize: '1.4rem', color: 'white', margin: 0 }}>

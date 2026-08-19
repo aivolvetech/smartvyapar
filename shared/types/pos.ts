@@ -102,6 +102,8 @@ export interface POSCartLine {
   discountValue: number;
   discountAmount: number;
   taxableAmount: number;
+  cgstAmount: number;
+  sgstAmount: number;
   lineTotal: number;
   priceSource: POSPriceSource;
   advisoryStock: number;

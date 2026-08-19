@@ -47,6 +47,22 @@ export class CustomerService {
 
   public createCustomer(input: CreateCustomerInput): Customer {
     const shop = this.requireShop();
+
+    if ((input as any).requireUniquePhone || (input as any).isQuick) {
+      if (!input.name || !input.name.trim()) {
+        throw new Error('CUSTOMER_NAME_REQUIRED');
+      }
+      if (!input.phone || !input.phone.trim() || !/^[0-9+\-\s()]{6,20}$/.test(input.phone.trim())) {
+        throw new Error('INVALID_MOBILE');
+      }
+      const normPhone = input.phone.trim().replace(/[^0-9]/g, '');
+      if (normPhone) {
+        const activeDuplicate = this.repo.findActiveByPhone(shop.id, normPhone);
+        if (activeDuplicate) {
+          throw new Error('CUSTOMER_MOBILE_EXISTS');
+        }
+      }
+    }
     
     // Auto-generate customerCode if missing
     let customerCode = input.customerCode?.trim();

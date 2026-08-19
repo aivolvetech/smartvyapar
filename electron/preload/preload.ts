@@ -131,6 +131,7 @@ contextBridge.exposeInMainWorld('smartVyapar', {
   holdSalesInvoice: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.SALES_HOLD_BILL, id),
   resumeSalesInvoice: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.SALES_RESUME_BILL, id),
   deleteDraftSalesInvoice: (id: string) => ipcRenderer.invoke(IPC_CHANNELS.SALES_DELETE_DRAFT, id),
+  getSalesHistory: (filter: any) => ipcRenderer.invoke(IPC_CHANNELS.SALES_HISTORY, filter),
 
   // POS / Billing (Phase 6.4)
   searchPOSProducts: (input: any) => ipcRenderer.invoke(IPC_CHANNELS.POS_SEARCH_PRODUCTS, input),

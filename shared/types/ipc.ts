@@ -474,6 +474,7 @@ export const IPC_CHANNELS = {
   SALES_HOLD_BILL: 'sales:holdBill',
   SALES_RESUME_BILL: 'sales:resumeBill',
   SALES_DELETE_DRAFT: 'sales:deleteDraft',
+  SALES_HISTORY: 'sales:history',
 
   // POS/Billing (Phase 6.4)
   POS_SEARCH_PRODUCTS: 'pos:searchProducts',

@@ -11,6 +11,38 @@ const barcodeResolutionService = new SalesBarcodeResolutionService();
 const productSearchService = new POSProductSearchService();
 
 export function registerSalesIpc() {
+  ipcMain.handle(IPC_CHANNELS.SALES_HISTORY, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const shopId = typeof payload?.shopId === 'string' ? payload.shopId.trim() : '';
+      if (!shopId) return { success: false, error: 'Shop ID is required.' };
+      const statuses = ['DRAFT', 'HELD', 'POSTED', 'CANCELLED'];
+      const paymentStatuses = ['UNPAID', 'PARTIALLY_PAID', 'PAID'];
+      if (payload.status && !statuses.includes(payload.status)) return { success: false, error: 'Invalid sale status.' };
+      if (payload.paymentStatus && !paymentStatuses.includes(payload.paymentStatus)) return { success: false, error: 'Invalid payment status.' };
+      const page = payload.page === undefined ? 1 : Number(payload.page);
+      const pageSize = payload.pageSize === undefined ? 25 : Number(payload.pageSize);
+      if (!Number.isInteger(page) || page < 1 || !Number.isInteger(pageSize) || pageSize < 1 || pageSize > 200) {
+        return { success: false, error: 'Invalid pagination.' };
+      }
+      const result = salesService.listSalesHistory({
+        shopId,
+        dateFrom: typeof payload.dateFrom === 'string' && payload.dateFrom ? payload.dateFrom : undefined,
+        dateTo: typeof payload.dateTo === 'string' && payload.dateTo ? payload.dateTo : undefined,
+        invoiceNumber: typeof payload.invoiceNumber === 'string' && payload.invoiceNumber.trim() ? payload.invoiceNumber.trim() : undefined,
+        customerId: typeof payload.customerId === 'string' && payload.customerId ? payload.customerId : undefined,
+        paymentStatus: payload.paymentStatus || undefined,
+        status: payload.status || undefined,
+        page,
+        pageSize,
+      });
+      return { success: true, data: result };
+    } catch (err: any) {
+      logError('IPC sales:history failed', err);
+      return { success: false, error: err.message === 'SALE_NOT_FOUND' ? 'SALE_NOT_FOUND' : 'Failed to load sales history.' };
+    }
+  });
+
   // Existing Sales Draft (Phase 6.3)
   ipcMain.handle(IPC_CHANNELS.SALES_CREATE_DRAFT, async (event, payload: any): Promise<IPCResponse<any>> => {
     if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
