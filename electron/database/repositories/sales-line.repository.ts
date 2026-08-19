@@ -105,6 +105,7 @@ export class SalesLineRepository {
           igstAmount = ?,
           cessAmount = ?,
           lineTotal = ?,
+          inventoryTransactionId = ?,
           updatedAt = ?
         WHERE id = ?
       `).run(
@@ -121,6 +122,7 @@ export class SalesLineRepository {
         line.igstAmount,
         line.cessAmount,
         line.lineTotal,
+        line.inventoryTransactionId ?? null,
         line.updatedAt,
         line.id
       );

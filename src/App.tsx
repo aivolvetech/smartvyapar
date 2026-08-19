@@ -74,6 +74,9 @@ declare global {
       resumeSalesInvoice(id: string): Promise<IPCResponse<any>>;
       deleteDraftSalesInvoice(id: string): Promise<IPCResponse<any>>;
       getSalesHistory(filter: any): Promise<IPCResponse<any>>;
+      receiveCustomerPayment(input: any): Promise<IPCResponse<any>>;
+      cancelSale(input: any): Promise<IPCResponse<any>>;
+      getSalesDashboardSummary(input: any): Promise<IPCResponse<any>>;
     };
   }
 }
@@ -843,6 +846,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [resumeSalesInvoiceId, setResumeSalesInvoiceId] = useState<string | null>(null);
   const [preselectedImportType, setPreselectedImportType] = useState<ImportType | null>(null);
+
+  // Sales Dashboard States
+  const [salesDashboard, setSalesDashboard] = useState<any>(null);
+  const [salesRangeType, setSalesRangeType] = useState<'today' | 'week' | 'month' | 'custom'>('month');
+  const [salesDateFrom, setSalesDateFrom] = useState('');
+  const [salesDateTo, setSalesDateTo] = useState('');
   
   // Form Fields (Setup & Settings)
   const [name, setName] = useState('');
@@ -889,7 +898,20 @@ export default function App() {
         if (res.success && res.data) setPurchaseDashboard(res.data);
       })
       .catch(() => setPurchaseDashboard(null));
-  }, [startupState, activeTab]);
+
+    if (shop?.id) {
+      window.smartVyapar.getSalesDashboardSummary({
+        shopId: shop.id,
+        rangeType: salesRangeType,
+        dateFrom: salesRangeType === 'custom' ? salesDateFrom : undefined,
+        dateTo: salesRangeType === 'custom' ? salesDateTo : undefined,
+      })
+        .then((res: any) => {
+          if (res.success && res.data) setSalesDashboard(res.data);
+        })
+        .catch(() => setSalesDashboard(null));
+    }
+  }, [startupState, activeTab, salesRangeType, salesDateFrom, salesDateTo, shop?.id]);
 
   const runStartupSequence = async () => {
     try {
@@ -1341,37 +1363,89 @@ export default function App() {
         <main className="page-container">
           {activeTab === 'dashboard' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-              {/* Analytics Section */}
+              {/* Sales Snapshot Section */}
+              <div className="card-surface">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.25rem' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>Sales Snapshot</h3>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {(['today', 'week', 'month', 'custom'] as const).map(value => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`app-btn ${salesRangeType === value ? 'btn-primary' : ''}`}
+                        style={{ padding: '0.25rem 0.75rem', minHeight: 'auto', fontSize: '0.85rem' }}
+                        onClick={() => setSalesRangeType(value)}
+                      >
+                        {value.toUpperCase()}
+                      </button>
+                    ))}
+                    {salesRangeType === 'custom' && (
+                      <div style={{ display: 'flex', gap: '0.25rem', alignItems: 'center', marginLeft: '0.5rem' }}>
+                        <input
+                          type="date"
+                          className="form-input"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', minHeight: 'auto', width: '130px' }}
+                          value={salesDateFrom}
+                          onChange={e => setSalesDateFrom(e.target.value)}
+                        />
+                        <span style={{ fontSize: '0.8rem' }}>to</span>
+                        <input
+                          type="date"
+                          className="form-input"
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem', minHeight: 'auto', width: '130px' }}
+                          value={salesDateTo}
+                          onChange={e => setSalesDateTo(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="dashboard-grid">
+                  <div className="card-surface" style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Gross Sales</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.25rem 0', color: 'var(--text-primary)' }}>
+                      Rs {salesDashboard?.grossSales?.toFixed(2) ?? '0.00'}
+                    </div>
+                  </div>
+                  <div className="card-surface" style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Cancelled Sales</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.25rem 0', color: 'var(--text-muted)' }}>
+                      Rs {salesDashboard?.cancelledSales?.toFixed(2) ?? '0.00'}
+                    </div>
+                  </div>
+                  <div className="card-surface" style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Operational Net Sales</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.25rem 0', color: (salesDashboard?.operationalNetSales || 0) < 0 ? '#f87171' : 'var(--text-primary)' }}>
+                      Rs {salesDashboard?.operationalNetSales?.toFixed(2) ?? '0.00'}
+                    </div>
+                  </div>
+                  <div className="card-surface" style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Collections (Captured Cash/UPI/Card)</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.25rem 0', color: '#4ade80' }}>
+                      Rs {salesDashboard?.collections?.toFixed(2) ?? '0.00'}
+                    </div>
+                  </div>
+                  <div className="card-surface" style={{ background: 'var(--bg-app)', border: '1px solid var(--border-color)' }}>
+                    <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Current Receivables (Ledger-Derived)</div>
+                    <div style={{ fontSize: '1.6rem', fontWeight: 700, margin: '0.25rem 0', color: (salesDashboard?.currentReceivables || 0) > 0.001 ? '#f87171' : 'var(--text-primary)' }}>
+                      Rs {salesDashboard?.currentReceivables?.toFixed(2) ?? '0.00'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Legacy Snapshot and Low Stock Section */}
               <div className="dashboard-grid">
                 <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Today's Sales</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>₹0</div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coming in next phase</span>
-                </div>
-                <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Today's Bills</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>0</div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coming in next phase</span>
-                </div>
-                <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Low Stock Items</div>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Low Stock Products</div>
                   <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>{inventoryDashboard?.lowStockProducts ?? 0}</div>
                   <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Inventory ledger</span>
                 </div>
                 <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Customer Outstanding</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>₹0</div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coming in next phase</span>
-                </div>
-                <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Purchase Due</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>₹0</div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coming in next phase</span>
-                </div>
-                <div className="card-surface">
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Expenses Today</div>
-                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>₹0</div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Coming in next phase</span>
+                  <div style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Total Product Items</div>
+                  <div style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0.5rem 0' }}>{inventoryDashboard?.totalTrackedProducts ?? 0}</div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Registered active items</span>
                 </div>
               </div>
 

@@ -94,6 +94,7 @@ export interface SalesPayment {
   notes: string | null;
   idempotencyKey: string | null;
   createdAt: string;
+  paymentSource?: 'SALE_CHECKOUT' | 'OUTSTANDING_RECOVERY';
 }
 
 // Editable draft line input structure (does not trust snapshots from the renderer)
@@ -119,6 +120,7 @@ export interface DraftSalesInvoiceInput {
 export interface SalesInvoiceDetail {
   invoice: SalesInvoice;
   lines: SalesInvoiceLine[];
+  payments?: SalesPayment[];
 }
 
 export interface SalesHistoryFilter {

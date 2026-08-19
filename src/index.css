@@ -877,3 +877,39 @@ html, body {
 /* Price display in list */
 .price-cell { font-weight: 600; font-variant-numeric: tabular-nums; }
 .price-na   { color: var(--text-muted); font-weight: 400; }
+
+/* Print Media Styles */
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  #root * {
+    visibility: hidden;
+  }
+  .printable-receipt-wrapper, .printable-receipt-wrapper * {
+    visibility: visible;
+  }
+  .printable-receipt-wrapper {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    background: white !important;
+    color: black !important;
+    font-size: 11px;
+    line-height: 1.4;
+    font-family: monospace;
+  }
+  .printable-receipt-wrapper table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+  }
+  .printable-receipt-wrapper th, .printable-receipt-wrapper td {
+    border-bottom: 1px dashed #ccc;
+    padding: 4px;
+    text-align: left;
+    color: black !important;
+  }
+}

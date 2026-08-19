@@ -156,6 +156,7 @@ export interface POSDraftViewModel {
   paymentStatus?: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID';
   paidAmount?: number;
   outstandingAmount?: number;
+  payments?: any[];
 }
 
 export interface POSDraftSaveInput {

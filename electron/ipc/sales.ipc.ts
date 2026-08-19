@@ -403,4 +403,50 @@ export function registerSalesIpc() {
       return { success: false, error: err.message || 'Failed to calculate POS cart.' };
     }
   });
+
+  ipcMain.handle(IPC_CHANNELS.POS_RECEIVE_PAYMENT, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const { invoiceId, paymentMode, amount, referenceNumber, paymentContext } = payload || {};
+      if (!invoiceId) return { success: false, error: 'Invoice ID is required.' };
+      if (!paymentMode) return { success: false, error: 'Payment mode is required.' };
+      if (amount === undefined) return { success: false, error: 'Amount is required.' };
+
+      const result = salesService.receiveCustomerPayment(invoiceId, paymentMode, amount, referenceNumber, paymentContext);
+      return { success: true, data: result };
+    } catch (err: any) {
+      logError('IPC pos:receivePayment failed', err);
+      return { success: false, error: err.message || 'Failed to process outstanding payment.' };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.POS_CANCEL_SALE, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const { invoiceId, reason, version } = payload || {};
+      if (!invoiceId) return { success: false, error: 'Invoice ID is required.' };
+      if (!reason) return { success: false, error: 'Cancellation reason is required.' };
+      if (version === undefined) return { success: false, error: 'Version is required.' };
+
+      const result = salesService.cancelSale(invoiceId, reason, Number(version));
+      return { success: true, data: result };
+    } catch (err: any) {
+      logError('IPC pos:cancelSale failed', err);
+      return { success: false, error: err.message || 'Failed to cancel sale.' };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SALES_DASHBOARD, async (event, payload: any): Promise<IPCResponse<any>> => {
+    if (!isTrustedSender(event)) return { success: false, error: 'Access denied.' };
+    try {
+      const { shopId, dateFrom, dateTo, rangeType } = payload || {};
+      if (!shopId) return { success: false, error: 'Shop ID is required.' };
+
+      const result = salesService.getSalesDashboardSummary(shopId, { shopId, dateFrom, dateTo, rangeType });
+      return { success: true, data: result };
+    } catch (err: any) {
+      logError('IPC sales:dashboard failed', err);
+      return { success: false, error: err.message || 'Failed to load sales dashboard summary.' };
+    }
+  });
 }

@@ -1,4 +1,4 @@
-import { SalesInvoice, SalesInvoiceLine, SalesInvoiceDiscountType, SalesInvoiceStatus } from '../../../../shared/models/sales';
+import { SalesInvoice, SalesInvoiceLine, SalesInvoiceDiscountType, SalesInvoiceStatus, SalesPayment } from '../../../../shared/models/sales';
 
 export function mapRowToSalesInvoice(row: any): SalesInvoice {
   return {
@@ -74,5 +74,21 @@ export function mapRowToSalesInvoiceLine(row: any): SalesInvoiceLine {
     inventoryTransactionId: row.inventoryTransactionId || null,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
+  };
+}
+
+export function mapRowToSalesPayment(row: any): SalesPayment {
+  return {
+    id: row.id,
+    salesInvoiceId: row.salesInvoiceId,
+    paymentMode: row.paymentMode as any,
+    amount: Number(row.amount || 0),
+    referenceNumber: row.referenceNumber || null,
+    paymentDate: row.paymentDate,
+    status: row.status as any,
+    notes: row.notes || null,
+    idempotencyKey: row.idempotencyKey || null,
+    createdAt: row.createdAt,
+    paymentSource: row.paymentSource as any
   };
 }

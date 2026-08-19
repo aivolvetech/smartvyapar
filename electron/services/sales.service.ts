@@ -11,6 +11,7 @@ import { DocumentSequenceRepository } from '../database/repositories/document-se
 import { InventoryTransactionRepository } from '../database/repositories/inventory-transaction.repository';
 import { CustomerLedgerRepository } from '../database/repositories/customer-ledger.repository';
 import { ShopRepository } from '../database/repositories/shop.repository';
+import { mapRowToSalesPayment } from '../database/repositories/row-mappers/sales.mapper';
 import { SalesPriceResolutionService } from './sales-price-resolution.service';
 import { SalesBarcodeResolutionService } from './sales-barcode-resolution.service';
 import { resolveEffectiveNegativeStock } from './stock-policy';
@@ -35,6 +36,7 @@ import {
   POSWarning,
   POSPriceSource
 } from '../../shared/types/pos';
+import { SalesDashboardFilter, SalesDashboardSummary } from '../../shared/types/ipc';
 
 // Standard two-decimal rounding helper
 function money(value: number): number {
@@ -274,6 +276,9 @@ export class SalesService {
 
     const cart = this.calculateProvisionalTotals(invoice, lines, customer, shop);
 
+    const paymentRows = db.prepare('SELECT * FROM SalesPayment WHERE salesInvoiceId = ? ORDER BY createdAt ASC').all(invoice.id) as any[];
+    const payments = paymentRows.map(mapRowToSalesPayment);
+
     return {
       id: invoice.id,
       shopId: invoice.shopId,
@@ -291,7 +296,8 @@ export class SalesService {
       invoiceNumber: invoice.invoiceNumber,
       paymentStatus: invoice.paymentStatus as any,
       paidAmount: invoice.paidAmount,
-      outstandingAmount: invoice.outstandingAmount
+      outstandingAmount: invoice.outstandingAmount,
+      payments
     };
   }
 
@@ -547,7 +553,10 @@ export class SalesService {
       throw new Error(`Access denied. Invoice does not belong to this shop.`);
     }
     const lines = this.salesLineRepo.findByInvoiceId(id);
-    return { invoice, lines };
+    const db = getDatabaseConnection();
+    const paymentRows = db.prepare('SELECT * FROM SalesPayment WHERE salesInvoiceId = ? ORDER BY createdAt ASC').all(id) as any[];
+    const payments = paymentRows.map(mapRowToSalesPayment);
+    return { invoice, lines, payments };
   }
 
   /**
@@ -1533,8 +1542,8 @@ export class SalesService {
         if (pay.amount > 0) {
           db.prepare(`
             INSERT INTO SalesPayment (
-              id, salesInvoiceId, paymentMode, amount, referenceNumber, paymentDate, status, notes, idempotencyKey, createdAt
-            ) VALUES (?, ?, ?, ?, ?, ?, 'CAPTURED', NULL, NULL, ?)
+              id, salesInvoiceId, paymentMode, amount, referenceNumber, paymentDate, status, notes, idempotencyKey, createdAt, paymentSource
+            ) VALUES (?, ?, ?, ?, ?, ?, 'CAPTURED', NULL, NULL, ?, 'SALE_CHECKOUT')
           `).run(
             crypto.randomUUID(),
             invoice.id,
@@ -1680,5 +1689,358 @@ export class SalesService {
     });
 
     return this.calculateProvisionalTotals(invoice, lines, customer, shop);
+  }
+
+  /**
+   * Authoritatively records customer payment against a posted invoice.
+   */
+  public receiveCustomerPayment(
+    invoiceId: string,
+    paymentMode: 'CASH' | 'UPI' | 'CARD' | 'BANK_TRANSFER',
+    amount: number,
+    referenceNumber?: string | null,
+    paymentContext?: { upiConfirmed?: boolean; confirmedUpiAmount?: number }
+  ): SalesInvoiceDetail {
+    const db = getDatabaseConnection();
+
+    return db.transaction(() => {
+      const now = new Date().toISOString();
+      const today = now.substring(0, 10);
+
+      // 1. Read invoice
+      const invoice = this.salesInvoiceRepo.findById(invoiceId);
+      if (!invoice) {
+        throw new Error('SALE_NOT_FOUND');
+      }
+
+      // 2. Status check
+      if (invoice.status === 'CANCELLED') {
+        throw new Error('SALE_ALREADY_CANCELLED');
+      }
+      if (invoice.status !== 'POSTED') {
+        throw new Error('SALE_NOT_POSTED');
+      }
+
+      // 3. Customer validation
+      const customer = this.customerRepo.findById(invoice.customerId);
+      if (!customer) {
+        throw new Error('CUSTOMER_NOT_FOUND');
+      }
+      const isWalkIn = customer.customerType === 'WALK_IN' || customer.isWalkIn || customer.customerCode === 'WALKIN' || customer.customerCode === 'WALK-IN';
+      if (isWalkIn) {
+        throw new Error('CUSTOMER_PAYMENT_NOT_ALLOWED');
+      }
+
+      // 4. Shop Settings
+      const shop = this.shopRepo.getShop();
+      if (!shop || shop.id !== invoice.shopId) {
+        throw new Error('SHOP_NOT_FOUND');
+      }
+
+      // 5. Amount validation
+      if (amount <= 0 || !Number.isFinite(amount)) {
+        throw new Error('PAYMENT_AMOUNT_INVALID');
+      }
+
+      const outstandingPaise = Math.round(invoice.outstandingAmount * 100);
+      if (outstandingPaise === 0) {
+        throw new Error('INVOICE_ALREADY_PAID');
+      }
+
+      const inputPaise = Math.round(amount * 100);
+      if (inputPaise > outstandingPaise) {
+        throw new Error('PAYMENT_EXCEEDS_OUTSTANDING');
+      }
+
+      // 6. UPI QR validation
+      if (paymentMode === 'UPI') {
+        if (!shop.merchantUpiId || !shop.merchantUpiId.trim()) {
+          throw new Error('UPI_NOT_CONFIGURED');
+        }
+        if (!paymentContext || !paymentContext.upiConfirmed || paymentContext.confirmedUpiAmount !== amount) {
+          throw new Error('UPI_CONFIRMATION_REQUIRED');
+        }
+      }
+
+      // 7. Insert SalesPayment
+      const paymentId = crypto.randomUUID();
+      db.prepare(`
+        INSERT INTO SalesPayment (
+          id, salesInvoiceId, paymentMode, amount, referenceNumber, paymentDate, status, notes, idempotencyKey, createdAt, paymentSource
+        ) VALUES (?, ?, ?, ?, ?, ?, 'CAPTURED', NULL, NULL, ?, 'OUTSTANDING_RECOVERY')
+      `).run(
+        paymentId,
+        invoice.id,
+        paymentMode,
+        amount,
+        referenceNumber || null,
+        today,
+        now
+      );
+
+      // 8. Insert CustomerLedger RECEIPT
+      this.customerLedgerRepo.create({
+        customerId: invoice.customerId,
+        shopId: invoice.shopId,
+        entryType: 'RECEIPT',
+        referenceType: 'SALES_INVOICE',
+        referenceId: invoice.id,
+        referenceNumber: invoice.invoiceNumber,
+        debitAmount: 0,
+        creditAmount: amount,
+        occurredAt: today,
+        notes: `Outstanding recovery via ${paymentMode}`
+      });
+
+      // 9. Recalculate paid & outstanding fields
+      const newPaidPaise = Math.round(invoice.paidAmount * 100) + inputPaise;
+      const newOutstandingPaise = Math.round(invoice.grandTotal * 100) - newPaidPaise;
+
+      let paymentStatus: 'UNPAID' | 'PARTIALLY_PAID' | 'PAID' = 'UNPAID';
+      if (newOutstandingPaise === 0) {
+        paymentStatus = 'PAID';
+      } else if (newOutstandingPaise > 0 && newPaidPaise > 0) {
+        paymentStatus = 'PARTIALLY_PAID';
+      }
+
+      invoice.paidAmount = newPaidPaise / 100;
+      invoice.outstandingAmount = newOutstandingPaise / 100;
+      invoice.paymentStatus = paymentStatus;
+      invoice.updatedAt = now;
+
+      // Persist update (triggers version/concurrency mismatch check)
+      this.salesInvoiceRepo.update(invoice);
+
+      return this.getDraft(invoiceId, shop.id);
+    })();
+  }
+
+  /**
+   * Cancels a posted sale invoice, reversing all stock, payment, and ledger effects.
+   */
+  public cancelSale(invoiceId: string, reason: string, version: number): SalesInvoiceDetail {
+    const db = getDatabaseConnection();
+
+    return db.transaction(() => {
+      const now = new Date().toISOString();
+      const today = now.substring(0, 10);
+
+      // 1. Read invoice
+      const invoice = this.salesInvoiceRepo.findById(invoiceId);
+      if (!invoice) {
+        throw new Error('SALE_NOT_FOUND');
+      }
+
+      // 2. State & validation checks
+      if (invoice.status === 'CANCELLED') {
+        throw new Error('SALE_ALREADY_CANCELLED');
+      }
+      if (invoice.status !== 'POSTED') {
+        throw new Error('SALE_NOT_POSTED');
+      }
+      if (invoice.version !== version) {
+        throw new Error('STALE_INVOICE_VERSION');
+      }
+      if (!reason || !reason.trim()) {
+        throw new Error('CANCELLATION_REASON_REQUIRED');
+      }
+
+      // 3. Customer & Shop details
+      const customer = this.customerRepo.findById(invoice.customerId);
+      if (!customer) {
+        throw new Error('CUSTOMER_NOT_FOUND');
+      }
+      const shop = this.shopRepo.getShop();
+      if (!shop || shop.id !== invoice.shopId) {
+        throw new Error('SHOP_NOT_FOUND');
+      }
+
+      // 4. Update SalesInvoice status to CANCELLED
+      invoice.status = 'CANCELLED';
+      invoice.cancelledAt = now;
+      invoice.cancellationReason = reason.trim();
+      invoice.paidAmount = 0;
+      invoice.outstandingAmount = 0;
+      invoice.paymentStatus = 'UNPAID';
+      invoice.updatedAt = now;
+
+      // Persist status change (updates version, triggers concurrency mismatch check)
+      this.salesInvoiceRepo.update(invoice);
+
+      // 5. Reverse Stock (InventoryTransactions)
+      const lines = this.salesLineRepo.findByInvoiceId(invoiceId);
+      for (const line of lines) {
+        if (line.productTypeSnapshot === 'GOODS' && line.inventoryTransactionId) {
+          // Programmatic check: verify if a reversal already exists for this transaction
+          const existingReversal = db.prepare('SELECT id FROM InventoryTransaction WHERE reversalOfTransactionId = ?').get(line.inventoryTransactionId);
+          if (!existingReversal) {
+            const origTx = db.prepare('SELECT * FROM InventoryTransaction WHERE id = ?').get(line.inventoryTransactionId) as any;
+            if (origTx) {
+              const reversalQty = -origTx.quantity;
+              db.prepare(`
+                INSERT INTO InventoryTransaction (
+                  id, shopId, productId, transactionType, quantity, unitCost, totalCost,
+                  referenceType, referenceId, referenceNumber, reversalOfTransactionId, occurredAt, postedAt, createdAt, updatedAt, version
+                ) VALUES (?, ?, ?, 'REVERSAL', ?, ?, ?, 'SALES_INVOICE', ?, ?, ?, ?, ?, ?, ?, 1)
+              `).run(
+                crypto.randomUUID(),
+                invoice.shopId,
+                line.productId,
+                reversalQty,
+                origTx.unitCost || 0,
+                money(reversalQty * (origTx.unitCost || 0)),
+                invoice.id,
+                invoice.invoiceNumber,
+                origTx.id,
+                today,
+                now,
+                now,
+                now
+              );
+            }
+          }
+        }
+      }
+
+      // 6. Reverse Payments
+      db.prepare(`
+        UPDATE SalesPayment
+        SET status = 'REVERSED'
+        WHERE salesInvoiceId = ? AND paymentMode != 'CREDIT' AND status = 'CAPTURED'
+      `).run(invoiceId);
+
+      // 7. Reverse Ledger for registered customers
+      const isWalkIn = customer.customerType === 'WALK_IN' || customer.isWalkIn || customer.customerCode === 'WALKIN' || customer.customerCode === 'WALK-IN';
+      if (!isWalkIn) {
+        // SALE_CANCELLATION Credit Entry to reverse the original SALE Debit
+        this.customerLedgerRepo.create({
+          customerId: invoice.customerId,
+          shopId: invoice.shopId,
+          entryType: 'SALE_CANCELLATION',
+          referenceType: 'SALES_INVOICE',
+          referenceId: invoice.id,
+          referenceNumber: invoice.invoiceNumber,
+          debitAmount: 0,
+          creditAmount: invoice.grandTotal,
+          occurredAt: today,
+          notes: `Reversal of Sales Invoice ${invoice.invoiceNumber}`
+        });
+
+        // RECEIPT_REVERSAL Debit entries for all original receipts
+        const receipts = db.prepare(`
+          SELECT * FROM CustomerLedgerEntry
+          WHERE customerId = ? AND entryType = 'RECEIPT' AND referenceType = 'SALES_INVOICE' AND referenceId = ?
+        `).all(invoice.customerId, invoice.id) as any[];
+
+        for (const receipt of receipts) {
+          if (receipt.creditAmount > 0) {
+            this.customerLedgerRepo.create({
+              customerId: invoice.customerId,
+              shopId: invoice.shopId,
+              entryType: 'RECEIPT_REVERSAL',
+              referenceType: 'SALES_INVOICE',
+              referenceId: invoice.id,
+              referenceNumber: invoice.invoiceNumber,
+              debitAmount: receipt.creditAmount,
+              creditAmount: 0,
+              occurredAt: today,
+              notes: `Reversal of Receipt for invoice ${invoice.invoiceNumber}`
+            });
+          }
+        }
+      }
+
+      return this.getDraft(invoiceId, shop.id);
+    })();
+  }
+
+  /**
+   * Calculates dashboard summary metrics for a given date range.
+   */
+  public getSalesDashboardSummary(shopId: string, filter: SalesDashboardFilter): SalesDashboardSummary {
+    let fromStr = filter.dateFrom || '';
+    let toStr = filter.dateTo || '';
+
+    if (filter.rangeType) {
+      const now = new Date();
+      const todayStr = now.toISOString().substring(0, 10);
+      if (filter.rangeType === 'today') {
+        fromStr = todayStr;
+        toStr = todayStr;
+      } else if (filter.rangeType === 'week') {
+        const day = now.getDay();
+        const diff = now.getDate() - day + (day === 0 ? -6 : 1);
+        const startOfWeek = new Date(now.setDate(diff));
+        fromStr = startOfWeek.toISOString().substring(0, 10);
+        toStr = todayStr;
+      } else if (filter.rangeType === 'month') {
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        fromStr = `${year}-${month}-01`;
+        toStr = todayStr;
+      }
+    }
+
+    // Default to current month if no range specified
+    if (!fromStr || !toStr) {
+      const now = new Date();
+      const todayStr = now.toISOString().substring(0, 10);
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      fromStr = `${year}-${month}-01`;
+      toStr = todayStr;
+    }
+
+    const db = getDatabaseConnection();
+
+    // 1. Gross Sales: Sum of grandTotal for posted invoices in range (includes cancelled ones for gross sales)
+    const grossRow = db.prepare(`
+      SELECT COALESCE(SUM(grandTotal), 0) AS total
+      FROM SalesInvoice
+      WHERE shopId = ? AND postedAt IS NOT NULL
+        AND substr(postedAt, 1, 10) >= ?
+        AND substr(postedAt, 1, 10) <= ?
+    `).get(shopId, fromStr, toStr) as { total: number };
+
+    // 2. Cancelled Sales: Sum of grandTotal for cancelled invoices where cancelledAt is in range
+    const cancelledRow = db.prepare(`
+      SELECT COALESCE(SUM(grandTotal), 0) AS total
+      FROM SalesInvoice
+      WHERE shopId = ? AND status = 'CANCELLED' AND cancelledAt IS NOT NULL
+        AND substr(cancelledAt, 1, 10) >= ?
+        AND substr(cancelledAt, 1, 10) <= ?
+    `).get(shopId, fromStr, toStr) as { total: number };
+
+    // 3. Collections: Sum of captured non-credit payments in range
+    const collectionsRow = db.prepare(`
+      SELECT COALESCE(SUM(amount), 0) AS total
+      FROM SalesPayment
+      WHERE salesInvoiceId IN (SELECT id FROM SalesInvoice WHERE shopId = ?)
+        AND status = 'CAPTURED'
+        AND paymentMode != 'CREDIT'
+        AND substr(paymentDate, 1, 10) >= ?
+        AND substr(paymentDate, 1, 10) <= ?
+    `).get(shopId, fromStr, toStr) as { total: number };
+
+    // 4. Current Receivables: Ledger-derived total balance (not limited to date range)
+    const receivablesRow = db.prepare(`
+      SELECT COALESCE(SUM(debitAmount), 0) - COALESCE(SUM(creditAmount), 0) AS balance
+      FROM CustomerLedgerEntry
+      WHERE shopId = ?
+    `).get(shopId) as { balance: number };
+
+    const grossSales = money(grossRow.total || 0);
+    const cancelledSales = money(cancelledRow.total || 0);
+    const operationalNetSales = money(grossSales - cancelledSales);
+    const collections = money(collectionsRow.total || 0);
+    const currentReceivables = money(receivablesRow.balance || 0);
+
+    return {
+      grossSales,
+      cancelledSales,
+      operationalNetSales,
+      collections,
+      currentReceivables
+    };
   }
 }

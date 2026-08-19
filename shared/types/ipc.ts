@@ -497,8 +497,40 @@ export const IPC_CHANNELS = {
   POS_DELETE_DRAFT: 'pos:deleteDraft',
   POS_POST_SALE: 'pos:postSale',
   POS_CALCULATE_CART: 'pos:calculateCart',
+  POS_RECEIVE_PAYMENT: 'pos:receivePayment',
+  POS_CANCEL_SALE: 'pos:cancelSale',
+  SALES_DASHBOARD: 'sales:dashboard',
 } as const;
 
 export type IpcChannel = typeof IPC_CHANNELS[keyof typeof IPC_CHANNELS];
 
 export * from '../models/customer';
+
+export interface ReceiveCustomerPaymentInput {
+  invoiceId: string;
+  paymentMode: 'CASH' | 'UPI' | 'CARD' | 'BANK_TRANSFER';
+  amount: number;
+  referenceNumber?: string | null;
+  paymentContext?: { upiConfirmed?: boolean; confirmedUpiAmount?: number };
+}
+
+export interface CancelSaleInput {
+  invoiceId: string;
+  reason: string;
+  version: number;
+}
+
+export interface SalesDashboardFilter {
+  shopId: string;
+  dateFrom?: string;
+  dateTo?: string;
+  rangeType?: 'today' | 'week' | 'month' | 'custom';
+}
+
+export interface SalesDashboardSummary {
+  grossSales: number;
+  cancelledSales: number;
+  operationalNetSales: number;
+  collections: number;
+  currentReceivables: number;
+}
