@@ -18,6 +18,7 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
   // Filter states
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [dateRangeType, setDateRangeType] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [customerId, setCustomerId] = useState('');
   const [paymentStatus, setPaymentStatus] = useState('');
@@ -54,6 +55,64 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
       setLoading(false);
     }
   }, [shopId, dateFrom, dateTo, invoiceNumber, customerId, paymentStatus, status]);
+
+  // Date Range calculation helper (local timezone safe)
+  const calculateDateRange = (type: string) => {
+    const now = new Date();
+    const format = (d: Date) => {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    };
+
+    switch (type) {
+      case 'today':
+        return { from: format(now), to: format(now) };
+      case 'yesterday': {
+        const yesterday = new Date();
+        yesterday.setDate(now.getDate() - 1);
+        return { from: format(yesterday), to: format(yesterday) };
+      }
+      case 'thisWeek': {
+        const sunday = new Date();
+        sunday.setDate(now.getDate() - now.getDay());
+        return { from: format(sunday), to: format(now) };
+      }
+      case 'lastWeek': {
+        const lastSunday = new Date();
+        lastSunday.setDate(now.getDate() - now.getDay() - 7);
+        const lastSaturday = new Date();
+        lastSaturday.setDate(now.getDate() - now.getDay() - 1);
+        return { from: format(lastSunday), to: format(lastSaturday) };
+      }
+      case 'thisMonth': {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        return { from: format(startOfMonth), to: format(now) };
+      }
+      case 'lastMonth': {
+        const firstOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+        return { from: format(firstOfLastMonth), to: format(lastOfLastMonth) };
+      }
+      default:
+        return { from: '', to: '' };
+    }
+  };
+
+  const handleDateRangeChange = (type: string) => {
+    setDateRangeType(type);
+    const range = calculateDateRange(type);
+    setDateFrom(range.from);
+    setDateTo(range.to);
+  };
+
+  // Auto-reload when quick range changes, but not keypresses in custom inputs
+  useEffect(() => {
+    if (dateRangeType !== 'custom') {
+      void load(1);
+    }
+  }, [dateFrom, dateTo, dateRangeType, status]);
 
   // Load detailed invoice for modal or print
   const handleViewInvoice = async (invoiceId: string) => {
@@ -98,12 +157,9 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
       .then((response: any) => response.success && setCustomers(response.data.items || []));
     (window as any).smartVyapar.getShop()
       .then((response: any) => response.success && setShop(response.data));
-    void load(1);
   }, [shopId]);
 
   const setQuickStatus = (value: '' | SalesInvoiceStatus) => setStatus(value);
-
-  useEffect(() => { void load(1); }, [status]);
 
   // Handle Cancellation Execution
   const handleCancelInvoice = async (e: React.FormEvent) => {
@@ -151,8 +207,22 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
           ))}
         </div>
         <div className="module-toolbar" style={{ flexWrap: 'wrap' }}>
-          <input className="form-input" type="date" aria-label="Sales from date" value={dateFrom} onChange={event => setDateFrom(event.target.value)} />
-          <input className="form-input" type="date" aria-label="Sales to date" value={dateTo} onChange={event => setDateTo(event.target.value)} />
+          <select className="form-input" aria-label="Date Range Preset" value={dateRangeType} onChange={event => handleDateRangeChange(event.target.value)}>
+            <option value="">All Time</option>
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="thisWeek">This Week</option>
+            <option value="lastWeek">Last Week</option>
+            <option value="thisMonth">This Month</option>
+            <option value="lastMonth">Last Month</option>
+            <option value="custom">Custom Range</option>
+          </select>
+          {dateRangeType === 'custom' && (
+            <>
+              <input className="form-input" type="date" aria-label="Sales from date" value={dateFrom} onChange={event => setDateFrom(event.target.value)} />
+              <input className="form-input" type="date" aria-label="Sales to date" value={dateTo} onChange={event => setDateTo(event.target.value)} />
+            </>
+          )}
           <input className="form-input" placeholder="Invoice or draft number" value={invoiceNumber} onChange={event => setInvoiceNumber(event.target.value)} />
           <select className="form-input" aria-label="Sales customer" value={customerId} onChange={event => setCustomerId(event.target.value)}>
             <option value="">All customers</option>
