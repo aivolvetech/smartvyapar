@@ -152,4 +152,5 @@ contextBridge.exposeInMainWorld('smartVyapar', {
   receiveCustomerPayment: (input: any) => ipcRenderer.invoke(IPC_CHANNELS.POS_RECEIVE_PAYMENT, input),
   cancelSale: (input: any) => ipcRenderer.invoke(IPC_CHANNELS.POS_CANCEL_SALE, input),
   getSalesDashboardSummary: (input: any) => ipcRenderer.invoke(IPC_CHANNELS.SALES_DASHBOARD, input),
+  printWindow: () => ipcRenderer.invoke(IPC_CHANNELS.PRINT_WINDOW),
 });

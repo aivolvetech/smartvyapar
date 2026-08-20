@@ -396,6 +396,7 @@ export const IPC_CHANNELS = {
   SHOP_CREATE: 'shop:create',
   // DB
   DB_STATUS: 'db:status',
+  PRINT_WINDOW: 'app:printWindow',
   // Unit of Measure
   UNIT_LIST:   'unit:list',
   UNIT_CREATE: 'unit:create',

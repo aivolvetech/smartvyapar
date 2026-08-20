@@ -77,6 +77,7 @@ declare global {
       receiveCustomerPayment(input: any): Promise<IPCResponse<any>>;
       cancelSale(input: any): Promise<IPCResponse<any>>;
       getSalesDashboardSummary(input: any): Promise<IPCResponse<any>>;
+      printWindow(): Promise<IPCResponse<any>>;
     };
   }
 }
@@ -849,12 +850,17 @@ export default function App() {
   const [preselectedImportType, setPreselectedImportType] = useState<ImportType | null>(null);
   const [printData, setPrintData] = useState<any>(null);
 
-  // Run window print trigger
+  // Run window print trigger via safe IPC
   useEffect(() => {
     if (printData) {
-      const timer = setTimeout(() => {
-        window.print();
-        setPrintData(null);
+      const timer = setTimeout(async () => {
+        try {
+          await window.smartVyapar.printWindow();
+        } catch (err) {
+          console.error('Failed to print document:', err);
+        } finally {
+          setPrintData(null);
+        }
       }, 300);
       return () => clearTimeout(timer);
     }
