@@ -1,16 +1,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SalesHistoryItem, SalesHistoryResult, SalesInvoiceStatus } from '../../../shared/models/sales';
 import ReceivePaymentModal from './ReceivePaymentModal';
-import PrintableReceipt from './PrintableReceipt';
 
 interface Props {
   shopId: string;
   onResume: (invoiceId: string) => void;
+  onPrint?: (printData: any) => void;
 }
 
 const emptyResult: SalesHistoryResult = { items: [], totalItems: 0, page: 1, pageSize: 25, totalPages: 0 };
 
-export default function SalesHistoryModule({ shopId, onResume }: Props) {
+export default function SalesHistoryModule({ shopId, onResume, onPrint }: Props) {
   const [result, setResult] = useState<SalesHistoryResult>(emptyResult);
   const [customers, setCustomers] = useState<any[]>([]);
   const [shop, setShop] = useState<any>(null);
@@ -133,11 +133,16 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
 
   const handlePrint = (invoiceData: any) => {
     const customerObj = customers.find(c => c.id === invoiceData.customerId);
-    setPrintData({
+    const pData = {
       detail: invoiceData,
       shop,
       customer: customerObj
-    });
+    };
+    if (onPrint) {
+      onPrint(pData);
+    } else {
+      setPrintData(pData);
+    }
   };
 
   // Run window print trigger
@@ -351,7 +356,7 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
                     {selectedInvoice.status}
                   </span>
                 </div>
-                <div><strong style={{ color: 'var(--text-secondary)' }}>Date:</strong> <span style={{ color: 'var(--text-primary)' }}>{selectedInvoice.invoiceDate}</span></div>
+                <div><strong style={{ color: 'var(--text-secondary)' }}>Date:</strong> <span style={{ color: 'var(--text-primary)' }}>{selectedInvoice.invoiceDate ? selectedInvoice.invoiceDate.split('-').reverse().join('/') : ''}</span></div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div><strong style={{ color: 'var(--text-secondary)' }}>Customer:</strong> <span style={{ color: 'var(--text-primary)' }}>{customers.find(c => c.id === selectedInvoice.customerId)?.name || 'Walk-In Customer'}</span></div>
@@ -396,8 +401,8 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
                         ) : '—'}
                       </td>
                       <td>Rs {line.taxableAmount?.toFixed(2)}</td>
-                      <td>Rs {line.cgstAmount?.toFixed(2)} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({line.cgstRate || 0}%)</span></td>
-                      <td>Rs {line.sgstAmount?.toFixed(2)} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({line.sgstRate || 0}%)</span></td>
+                      <td>Rs {line.cgstAmount?.toFixed(2)} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({line.cgstRate || (line.taxableAmount > 0 ? Math.round((line.cgstAmount / line.taxableAmount) * 1000) / 10 : 0)}%)</span></td>
+                      <td>Rs {line.sgstAmount?.toFixed(2)} <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>({line.sgstRate || (line.taxableAmount > 0 ? Math.round((line.sgstAmount / line.taxableAmount) * 1000) / 10 : 0)}%)</span></td>
                       <td style={{ fontWeight: 700, color: 'var(--text-primary)' }}>Rs {line.lineTotal?.toFixed(2)}</td>
                     </tr>
                   ))}
@@ -555,12 +560,6 @@ export default function SalesHistoryModule({ shopId, onResume }: Props) {
         </div>
       )}
 
-      {/* Hidden Print Container */}
-      {printData && (
-        <div className="printable-receipt-wrapper">
-          <PrintableReceipt detail={printData.detail} shop={printData.shop} customer={printData.customer} />
-        </div>
-      )}
     </div>
   );
 }

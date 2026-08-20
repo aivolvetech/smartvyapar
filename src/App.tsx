@@ -89,6 +89,7 @@ import BulkImportModule from './components/import/BulkImportModule';
 import CustomerModule from './components/customers/CustomerModule';
 import BillingModule from './components/pos/BillingModule';
 import SalesHistoryModule from './components/sales/SalesHistoryModule';
+import PrintableReceipt from './components/sales/PrintableReceipt';
 
 if (typeof window !== 'undefined' && !window.smartVyapar) {
   // Setup simple in-memory storage for the web-mode/browser mocks
@@ -846,6 +847,18 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [resumeSalesInvoiceId, setResumeSalesInvoiceId] = useState<string | null>(null);
   const [preselectedImportType, setPreselectedImportType] = useState<ImportType | null>(null);
+  const [printData, setPrintData] = useState<any>(null);
+
+  // Run window print trigger
+  useEffect(() => {
+    if (printData) {
+      const timer = setTimeout(() => {
+        window.print();
+        setPrintData(null);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [printData]);
 
   // Sales Dashboard States
   const [salesDashboard, setSalesDashboard] = useState<any>(null);
@@ -1230,7 +1243,8 @@ export default function App() {
 
   // Render Main Layout Shell
   return (
-    <div className="app-shell">
+    <>
+      <div className="app-shell">
       {/* Sidebar Navigation */}
       <aside className="app-sidebar">
         <div className="sidebar-logo">
@@ -1655,7 +1669,7 @@ export default function App() {
           )}
 
           {activeTab === 'sales' && shop && (
-            <SalesHistoryModule shopId={shop.id} onResume={(invoiceId) => { setResumeSalesInvoiceId(invoiceId); setActiveTab('billing'); }} />
+            <SalesHistoryModule shopId={shop.id} onResume={(invoiceId) => { setResumeSalesInvoiceId(invoiceId); setActiveTab('billing'); }} onPrint={setPrintData} />
           )}
 
           {activeTab === 'import' && (
@@ -1687,5 +1701,12 @@ export default function App() {
         </div>
       )}
     </div>
+
+      {printData && (
+        <div className="printable-receipt-wrapper">
+          <PrintableReceipt detail={printData.detail} shop={shop} customer={printData.customer} />
+        </div>
+      )}
+    </>
   );
 }
