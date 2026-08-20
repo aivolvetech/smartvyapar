@@ -77,7 +77,7 @@ declare global {
       receiveCustomerPayment(input: any): Promise<IPCResponse<any>>;
       cancelSale(input: any): Promise<IPCResponse<any>>;
       getSalesDashboardSummary(input: any): Promise<IPCResponse<any>>;
-      printWindow(): Promise<IPCResponse<any>>;
+      printWindow(payload: { html: string }): Promise<IPCResponse<any>>;
     };
   }
 }
@@ -855,7 +855,13 @@ export default function App() {
     if (printData) {
       const timer = setTimeout(async () => {
         try {
-          await window.smartVyapar.printWindow();
+          const printElement = document.querySelector('.printable-receipt-wrapper');
+          if (printElement) {
+            const html = printElement.innerHTML;
+            await window.smartVyapar.printWindow({ html });
+          } else {
+            console.error('Print container element not found');
+          }
         } catch (err) {
           console.error('Failed to print document:', err);
         } finally {
