@@ -1241,6 +1241,7 @@ export class SalesService {
 
     const runTx = db.transaction(() => {
       const now = new Date().toISOString();
+      const today = now.substring(0, 10);
       // 1. Read draft invoice
       const invoice = this.salesInvoiceRepo.findById(invoiceId);
       if (!invoice) {
@@ -1488,6 +1489,7 @@ export class SalesService {
       }
 
       invoice.invoiceNumber = invoiceNumber;
+      invoice.invoiceDate = today;
       invoice.status = 'POSTED';
       invoice.paymentStatus = paymentStatus;
       invoice.subtotal = subtotalPaise / 100;
